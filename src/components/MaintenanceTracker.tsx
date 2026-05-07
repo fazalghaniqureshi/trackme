@@ -91,6 +91,7 @@ const MaintenanceTracker = () => {
     .sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime());
 
   const { page, totalPages, paged: pagedRecords, setPage } = usePagination(filteredRecords);
+  useEffect(() => { setPage(1); }, [filterDevice, filterType]);
 
   const totalCost = filteredRecords.reduce((s, r) => s + r.cost, 0);
 
@@ -200,14 +201,16 @@ const MaintenanceTracker = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        {[
-          { label: "Total Records", value: records.length, color: "var(--c-accent)" },
-          { label: "Overdue", value: overdue.length, color: "var(--c-danger)" },
-          { label: "Due This Month", value: upcoming.length, color: "var(--c-warning)" },
-          { label: "Total Cost", value: formatCurrency(records.reduce((s, r) => s + (r.cost ?? 0), 0)) },
-        ].map((c) => (
+        {(
+          [
+            { label: "Total Records", value: records.length, color: "var(--c-accent)" },
+            { label: "Overdue", value: overdue.length, color: "var(--c-danger)" },
+            { label: "Due This Month", value: upcoming.length, color: "var(--c-warning)" },
+            { label: "Total Cost", value: formatCurrency(records.reduce((s, r) => s + (r.cost ?? 0), 0)) },
+          ] as { label: string; value: string | number; color?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>

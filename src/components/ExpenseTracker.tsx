@@ -88,6 +88,7 @@ const ExpenseTracker = () => {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const { page, totalPages, paged: pagedEntries, setPage } = usePagination(filteredEntries);
+  useEffect(() => { setPage(1); }, [filterDevice, filterCategory, filterFrom, filterTo]);
 
   const filteredTotal = filteredEntries.reduce((s, e) => s + e.amount, 0);
 
@@ -173,14 +174,16 @@ const ExpenseTracker = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        {[
-          { label: "Total Expenses", value: formatCurrency(stats.totalExpenses) },
-          { label: "Total Records", value: stats.totalCount, color: "var(--c-accent)" },
-          { label: "Top Category", value: stats.mostExpensiveCategory ?? "—" },
-          { label: "This Month", value: formatCurrency(thisMonthTotal) },
-        ].map((c) => (
+        {(
+          [
+            { label: "Total Expenses", value: formatCurrency(stats.totalExpenses) },
+            { label: "Total Records", value: stats.totalCount, color: "var(--c-accent)" },
+            { label: "Top Category", value: stats.mostExpensiveCategory ?? "—" },
+            { label: "This Month", value: formatCurrency(thisMonthTotal) },
+          ] as { label: string; value: string | number; color?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>

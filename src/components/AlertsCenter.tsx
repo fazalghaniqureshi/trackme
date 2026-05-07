@@ -209,6 +209,7 @@ const AlertsCenter = () => {
     .filter((a) => filterCategory === "all" || a.category === filterCategory);
 
   const { page, totalPages, paged: pagedAlerts, setPage } = usePagination(filteredAlerts);
+  useEffect(() => { setPage(1); }, [filterSeverity, filterCategory]);
 
   const dangerCount = alerts.filter((a) => a.severity === "danger").length;
   const warningCount = alerts.filter((a) => a.severity === "warning").length;

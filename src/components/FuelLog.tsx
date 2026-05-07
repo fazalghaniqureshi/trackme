@@ -75,6 +75,7 @@ const FuelLog = () => {
     });
 
   const { page, totalPages, paged: pagedEntries, setPage } = usePagination(filteredEntries);
+  useEffect(() => { setPage(1); }, [filterDevice, filterFrom, filterTo]);
 
   const filteredTotalLiters = filteredEntries.reduce((s, e) => s + e.liters, 0);
   const filteredTotalCost = filteredEntries.reduce((s, e) => s + e.totalCost, 0);
@@ -183,14 +184,16 @@ const FuelLog = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        {[
-          { label: "Total Fill-Ups", value: stats.totalFillUps, color: "var(--c-accent)" },
-          { label: "Total Fuel", value: stats.totalLiters.toFixed(1), unit: "L" },
-          { label: "Total Fuel Cost", value: formatCurrency(stats.totalCost) },
-          { label: "Avg Efficiency", value: stats.avgEfficiency != null ? stats.avgEfficiency.toFixed(2) : "—", unit: stats.avgEfficiency != null ? "km/L" : "", color: "var(--c-success)" },
-        ].map((c) => (
+        {(
+          [
+            { label: "Total Fill-Ups", value: stats.totalFillUps, color: "var(--c-accent)" },
+            { label: "Total Fuel", value: stats.totalLiters.toFixed(1), unit: "L" },
+            { label: "Total Fuel Cost", value: formatCurrency(stats.totalCost) },
+            { label: "Avg Efficiency", value: stats.avgEfficiency != null ? stats.avgEfficiency.toFixed(2) : "—", unit: stats.avgEfficiency != null ? "km/L" : "", color: "var(--c-success)" },
+          ] as { label: string; value: string | number; color?: string; unit?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} unit={(c as any).unit} />
+            <StatCard label={c.label} value={c.value} color={c.color} unit={c.unit} />
           </div>
         ))}
       </div>

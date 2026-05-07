@@ -178,14 +178,16 @@ const DriverManager = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        {[
-          { label: "Total Drivers", value: drivers.length, color: "var(--c-accent)" },
-          { label: "Assigned", value: drivers.filter((d) => d.assignedDeviceId).length, color: "var(--c-success)" },
-          { label: "Unassigned", value: drivers.filter((d) => !d.assignedDeviceId).length },
-          { label: "License Expiring Soon", value: drivers.filter((d) => { const days = Math.ceil((new Date(d.licenseExpiry).getTime() - Date.now()) / 86400000); return days >= 0 && days <= 30; }).length, color: "var(--c-warning)" },
-        ].map((c) => (
+        {(
+          [
+            { label: "Total Drivers", value: drivers.length, color: "var(--c-accent)" },
+            { label: "Assigned", value: drivers.filter((d) => d.assignedDeviceId).length, color: "var(--c-success)" },
+            { label: "Unassigned", value: drivers.filter((d) => !d.assignedDeviceId).length },
+            { label: "License Expiring Soon", value: drivers.filter((d) => { const days = Math.ceil((new Date(d.licenseExpiry).getTime() - Date.now()) / 86400000); return days >= 0 && days <= 30; }).length, color: "var(--c-warning)" },
+          ] as { label: string; value: string | number; color?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>

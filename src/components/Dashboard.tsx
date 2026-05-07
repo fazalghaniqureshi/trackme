@@ -173,16 +173,18 @@ const Dashboard = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        {[
-          { label: "Total Devices", value: devices.length, color: "var(--c-accent)" },
-          { label: "Online", value: devices.filter((d) => d.status === "online").length, color: "var(--c-success)" },
-          { label: "Offline", value: devices.filter((d) => d.status === "offline").length, color: "var(--c-danger)" },
-          { label: "Today's Distance", value: stats ? stats.totalDistance.toFixed(1) : "0.0", unit: "km" },
-          { label: "Max Speed Today", value: stats ? stats.maxSpeed.toFixed(0) : "0", unit: "km/h" },
-          { label: "Avg Speed Today", value: stats ? stats.avgSpeed.toFixed(0) : "0", unit: "km/h" },
-        ].map((c) => (
+        {(
+          [
+            { label: "Total Devices", value: devices.length, color: "var(--c-accent)" },
+            { label: "Online", value: devices.filter((d) => d.status === "online").length, color: "var(--c-success)" },
+            { label: "Offline", value: devices.filter((d) => d.status === "offline").length, color: "var(--c-danger)" },
+            { label: "Today's Distance", value: stats ? stats.totalDistance.toFixed(1) : "0.0", unit: "km" },
+            { label: "Max Speed Today", value: stats ? stats.maxSpeed.toFixed(0) : "0", unit: "km/h" },
+            { label: "Avg Speed Today", value: stats ? stats.avgSpeed.toFixed(0) : "0", unit: "km/h" },
+          ] as { label: string; value: string | number; color?: string; unit?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-2">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} unit={(c as any).unit} />
+            <StatCard label={c.label} value={c.value} color={c.color} unit={c.unit} />
           </div>
         ))}
       </div>
@@ -192,14 +194,16 @@ const Dashboard = () => {
         <div className="col-12">
           <h6 className="text-muted text-uppercase fw-semibold mb-0">Fleet Health</h6>
         </div>
-        {[
-          { label: "Overdue Maintenance", value: overdueCount, color: overdueCount > 0 ? "var(--c-danger)" : "var(--c-success)" },
-          { label: "Licenses Expiring (30d)", value: expiringLicenses, color: expiringLicenses > 0 ? "var(--c-warning)" : "var(--c-success)" },
-          { label: "Active Drivers", value: activeDrivers, color: "var(--c-accent)" },
-          { label: "Fuel Cost This Month", value: `Rs. ${fuelThisMonth.toFixed(2)}` },
-        ].map((c) => (
+        {(
+          [
+            { label: "Overdue Maintenance", value: overdueCount, color: overdueCount > 0 ? "var(--c-danger)" : "var(--c-success)" },
+            { label: "Licenses Expiring (30d)", value: expiringLicenses, color: expiringLicenses > 0 ? "var(--c-warning)" : "var(--c-success)" },
+            { label: "Active Drivers", value: activeDrivers, color: "var(--c-accent)" },
+            { label: "Fuel Cost This Month", value: `Rs. ${fuelThisMonth.toFixed(2)}` },
+          ] as { label: string; value: string | number; color?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>
