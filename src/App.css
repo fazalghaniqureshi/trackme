@@ -588,6 +588,13 @@ option { background: var(--c-surface-2); color: var(--c-text); }
   border-radius: var(--r-md);
   padding: 16px;
   height: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+[style*="cursor: pointer"] > .stat-card:hover,
+[style*="cursor:pointer"] > .stat-card:hover {
+  border-color: var(--c-border-2);
+  background: var(--c-surface-2);
 }
 
 .stat-card-label {

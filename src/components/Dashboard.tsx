@@ -196,13 +196,13 @@ const Dashboard = () => {
         </div>
         {(
           [
-            { label: "Overdue Maintenance", value: overdueCount, color: overdueCount > 0 ? "var(--c-danger)" : "var(--c-success)" },
-            { label: "Licenses Expiring (30d)", value: expiringLicenses, color: expiringLicenses > 0 ? "var(--c-warning)" : "var(--c-success)" },
-            { label: "Active Drivers", value: activeDrivers, color: "var(--c-accent)" },
-            { label: "Fuel Cost This Month", value: `Rs. ${fuelThisMonth.toFixed(2)}` },
-          ] as { label: string; value: string | number; color?: string }[]
+            { label: "Overdue Maintenance", value: overdueCount, color: overdueCount > 0 ? "var(--c-danger)" : "var(--c-success)", route: "/maintenance" },
+            { label: "Licenses Expiring (30d)", value: expiringLicenses, color: expiringLicenses > 0 ? "var(--c-warning)" : "var(--c-success)", route: "/alerts" },
+            { label: "Active Drivers", value: activeDrivers, color: "var(--c-accent)", route: "/drivers" },
+            { label: "Fuel Cost This Month", value: `Rs. ${fuelThisMonth.toFixed(2)}`, route: "/expenses" },
+          ] as { label: string; value: string | number; color?: string; route: string }[]
         ).map((c) => (
-          <div key={c.label} className="col-6 col-md-3">
+          <div key={c.label} className="col-6 col-md-3" style={{ cursor: "pointer" }} onClick={() => navigate(c.route)}>
             <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
