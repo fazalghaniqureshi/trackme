@@ -1,70 +1,187 @@
-# Getting Started with Create React App
+# TrackMe - GPS Vehicle Tracking Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A fully functional GPS vehicle tracking application built with React, TypeScript, and Vite. Designed to work with all Teltonika GPS tracking devices.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- 🗺️ **Real-time Map View**: Interactive map showing all registered devices with live location updates
+- 📱 **Device Management**: Admin panel to add, edit, and delete Teltonika devices
+- 🚗 **Multiple Device Support**: Track multiple vehicles/devices simultaneously
+- 📊 **Device Status**: Monitor device status (online/offline), battery level, signal strength, and speed
+- 🔧 **Multi-Model Support**: Support for all Teltonika device families (FMB, FMC, FMM, FMP, FMT, GH series)
+- 💾 **Local Storage**: Device data persisted in browser localStorage
+- 🎨 **Modern UI**: Clean, responsive interface built with Bootstrap
 
-### `npm start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Installation
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm install
+```
 
-### `npm test`
+### Development
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm run dev
+```
 
-### `npm run build`
+The application will be available at `http://localhost:5173`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Build for Production
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm run build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Usage
 
-### `npm run eject`
+### Adding Devices
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Navigate to the Admin Panel by clicking "Manage Devices" on the map view
+2. Click "+ Add Device" to create a new device
+3. Fill in the required information:
+   - **Device Name**: A friendly name for the device
+   - **Device Model**: Select your Teltonika device model from the dropdown (FMB, FMC, FMM, FMP, FMT, GH series)
+   - **IMEI**: The 15-16 digit IMEI number of your Teltonika device
+   - **Initial Location**: Starting coordinates (optional, defaults to Kohat, Pakistan)
+   - **Description**: Optional notes about the device
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Viewing Devices on Map
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- The main map view displays all registered devices
+- Click on a device in the sidebar or on the map marker to focus on it
+- Device markers rotate based on heading direction
+- Click markers to see detailed information (IMEI, coordinates, speed, battery)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Device Status
 
-## Learn More
+- 🟢 **Green**: Device is online and sending data
+- 🔴 **Red**: Device is offline or not responding
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Traccar Integration
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This application integrates with [Traccar](https://www.traccar.org/), a free and open-source modern GPS tracking platform that supports 200+ device models and protocols.
 
-### Code Splitting
+### Setting Up Traccar
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Option 1: Use Traccar Demo Server**
+   - Visit the [Traccar Demo](https://demo.traccar.org)
+   - Create an account or use existing credentials
+   - Navigate to Settings → Traccar in this app
+   - Enter: `https://demo.traccar.org` as server URL
+   - Enter your Traccar username and password
+   - Click "Connect to Traccar"
 
-### Analyzing the Bundle Size
+2. **Option 2: Self-Hosted Traccar Server**
+   - Install Traccar server on your own infrastructure
+   - Follow [Traccar Installation Guide](https://www.traccar.org/download/)
+   - Configure your GPS devices to send data to your Traccar server
+   - Enter your server URL in the Traccar settings
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Traccar Features
 
-### Making a Progressive Web App
+- **Real-time Tracking**: Live location updates via WebSocket
+- **Device Management**: Sync devices from Traccar automatically
+- **Multi-Protocol Support**: Works with Teltonika, OBD, and 200+ other protocols
+- **Historical Data**: Access trip history and location data
+- **Alerts & Geofencing**: Configure alerts in Traccar (managed in Traccar interface)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Using Traccar
 
-### Advanced Configuration
+1. Navigate to **Settings → Traccar** in the app
+2. Enter your Traccar server credentials
+3. Click "Connect to Traccar"
+4. Click "Sync Devices from Traccar" to import your devices
+5. Devices will automatically sync and update in real-time
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Teltonika Device Integration
 
-### Deployment
+This application supports all Teltonika GPS tracking devices. To integrate real device data:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Supported Device Families
 
-### `npm run build` fails to minify
+- **FMB Series**: FMB001, FMB010, FMB100, FMB110, FMB120, FMB122, FMB125, FMB130, FMB140, FMB900, FMB920, FMB962, FMB964
+- **FMC Series**: FMC001, FMC110, FMC125, FMC130
+- **FMM Series**: FMM001, FMM640
+- **FMP Series**: FMP100
+- **FMT Series**: FMT100, FMT250
+- **GH Series**: GH3000, GH5200
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Option 1: Backend TCP Server
+
+1. Set up a TCP server to receive data from Teltonika devices (default port: 5027)
+2. Configure your Teltonika devices to send data to your server IP and port
+3. Parse incoming data packets using the Teltonika protocol (Codec 8, Codec 8 Extended, or Codec 16)
+4. Update device locations using the `updateDeviceLocation()` function from `deviceService`
+
+See `src/services/teltonikaService.ts` for integration examples and protocol details.
+
+### Option 2: WebSocket Connection
+
+If you have a backend server that processes Teltonika data:
+
+1. Set up a WebSocket server that receives and processes Teltonika device data
+2. Push updates to the frontend in JSON format:
+   ```json
+   {
+     "imei": "123456789012345",
+     "coords": [33.5816, 71.4492],
+     "angle": 45,
+     "speed": 60,
+     "battery": 85,
+     "signal": 4
+   }
+   ```
+3. Use the `setupWebSocketConnection()` function in `teltonikaService.ts`
+
+### Device Configuration
+
+Configure your Teltonika device using Teltonika Configurator or SMS commands:
+
+- Set server IP address and port
+- Configure data sending interval
+- Set up GPRS/APN settings
+- Enable GPS tracking
+
+For detailed configuration, refer to the [Teltonika Wiki](https://wiki.teltonika-gps.com/) for your specific device model.
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── AdminPanel.tsx    # Device management interface
+│   ├── MapView.tsx       # Main map view with device tracking
+│   └── ...
+├── services/
+│   ├── deviceService.ts     # Device CRUD operations and storage
+│   └── teltonikaService.ts  # Teltonika device integration helpers
+├── types/
+│   ├── device.ts         # Device type definitions
+│   └── ...
+└── App.tsx               # Main app with routing
+```
+
+## Technologies Used
+
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **React Router** - Navigation
+- **Leaflet** - Map rendering
+- **React Leaflet** - React bindings for Leaflet
+- **Bootstrap 5** - UI styling
+
+## Data Storage
+
+Currently, device data is stored in browser localStorage. For production use, consider:
+
+- Backend API with database (PostgreSQL, MongoDB, etc.)
+- User authentication and authorization
+- Real-time data synchronization
+- Historical tracking data storage
+
+## License
+
+MIT

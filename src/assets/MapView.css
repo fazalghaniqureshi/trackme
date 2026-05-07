@@ -1,0 +1,354 @@
+/* ── Layout ───────────────────────────────────────────── */
+.map-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* sidebar is on left, not top — full height */
+}
+
+.map-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+.sidebar {
+  width: 290px;
+  min-width: 290px;
+  display: flex;
+  flex-direction: column;
+  background: #0a1628;
+  color: #e2eaf6;
+  overflow: hidden;
+  border-right: 1px solid #1a2f4e;
+}
+
+.sidebar-header {
+  padding: 13px 16px;
+  background: #070e1c;
+  border-bottom: 1px solid #1a2f4e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.sidebar-body::-webkit-scrollbar { width: 4px; }
+.sidebar-body::-webkit-scrollbar-track { background: transparent; }
+.sidebar-body::-webkit-scrollbar-thumb { background: #1e3050; border-radius: 2px; }
+
+/* ── Device cards ─────────────────────────────────────── */
+.device-card {
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  background: #0f1f36;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.device-card:hover {
+  background: #162840;
+  border-color: #1e3552;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.device-card.selected {
+  background: #0e2444;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.2), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ── Route direction arrows ───────────────────────────── */
+.route-arrow {
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+  width: 14px;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
+  pointer-events: none;
+}
+
+/* ── Speeding alert ───────────────────────────────────── */
+@keyframes speed-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.55; transform: scale(1.5); }
+}
+
+.speeding-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 11px;
+  height: 11px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #0a1628;
+  animation: speed-pulse 0.75s ease-in-out infinite;
+}
+
+.device-card.speeding {
+  border-color: #ef4444 !important;
+  background: #2a0e0e !important;
+}
+
+.device-speed.speeding {
+  color: #f87171 !important;
+  font-weight: 700;
+}
+
+/* ── Status dot ───────────────────────────────────────── */
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.status-dot.online  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.7); }
+.status-dot.offline { background: #ef4444; }
+.status-dot.unknown { background: #475569; }
+
+/* ── Device card text ─────────────────────────────────── */
+.device-name    { font-weight: 600; font-size: 13px; color: #e2eaf6; }
+.device-speed   { font-size: 12px; color: #60a5fa; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.device-address { font-size: 11px; color: #7a93b4; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.device-time    { font-size: 10px; color: #3d5470; margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+/* ── WS status badge ──────────────────────────────────── */
+.ws-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ── Map controls ─────────────────────────────────────── */
+.map-controls {
+  padding: 12px 14px;
+  background: #070e1c;
+  border-top: 1px solid #1a2f4e;
+  flex-shrink: 0;
+}
+
+.map-type-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid #1e3050;
+  background: #0f1f36;
+  color: #7a93b4;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.map-type-btn:hover  { background: #162840; color: #e2eaf6; }
+.map-type-btn.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+
+/* ── Trip panel ───────────────────────────────────────── */
+.trip-panel {
+  padding: 12px 14px;
+  background: #070e1c;
+  border-top: 1px solid #1a2f4e;
+  flex-shrink: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.trip-label {
+  display: block;
+  font-size: 10px;
+  color: #3d5470;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.trip-input {
+  width: 100%;
+  background: #0f1f36;
+  border: 1px solid #1e3050;
+  color: #e2eaf6;
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 12px;
+  transition: border-color 0.12s;
+}
+.trip-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+.trip-input::placeholder { color: #3d5470; }
+
+.trip-btn {
+  width: 100%;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 500;
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.12s;
+  letter-spacing: 0.01em;
+}
+.trip-btn:hover    { background: #2563eb; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+.trip-btn:disabled { background: #1a2f4e; cursor: default; color: #3d5470; }
+
+.trip-error {
+  font-size: 11px;
+  color: #f87171;
+  margin-top: 7px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 5px;
+  padding: 5px 9px;
+}
+
+.trip-summary {
+  margin-top: 9px;
+  font-size: 12px;
+  color: #7a93b4;
+  background: #0f1f36;
+  border: 1px solid #1a2f4e;
+  border-radius: 6px;
+  padding: 7px 11px;
+  line-height: 1.8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Playback controls ────────────────────────────────── */
+.playback-controls { margin-top: 9px; }
+
+/* ── Map ──────────────────────────────────────────────── */
+.map {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Mobile bar (hidden on desktop) ───────────────────── */
+.mobile-map-bar { display: none; }
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 991px) {
+  /* Wrapper fills the space below the app top bar */
+  .map-wrapper {
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Map container is just the map — sidebar moved to sheet */
+  .map-container {
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Hide the desktop sidebar entirely */
+  .sidebar { display: none; }
+
+  /* Map fills all space above the bottom bar */
+  .map {
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 52px; /* reserve space for mobile bar */
+  }
+
+  /* ── Bottom tab bar ─────────────────────────────────── */
+  .mobile-map-bar {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: #070e1c;
+    border-top: 1px solid #1a2f4e;
+    z-index: 1000;
+    align-items: stretch;
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: #7a93b4;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    padding: 6px 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .mobile-tab:hover  { background: #0f1f36; color: #e2eaf6; }
+  .mobile-tab.active { color: #3b82f6; background: #0a1628; }
+
+  /* ── Slide-up sheet ─────────────────────────────────── */
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .mobile-sheet {
+    position: absolute;
+    bottom: 52px; /* sits above mobile bar */
+    left: 0;
+    right: 0;
+    max-height: 62vh;
+    background: #0a1628;
+    border-top: 1px solid #1a2f4e;
+    border-radius: 16px 16px 0 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.22s ease-out;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+  }
+
+  .mobile-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: #1e3050;
+    border-radius: 2px;
+    margin: 10px auto 6px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .mobile-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 10px 12px;
+  }
+
+  .mobile-sheet-body::-webkit-scrollbar { width: 4px; }
+  .mobile-sheet-body::-webkit-scrollbar-track { background: transparent; }
+  .mobile-sheet-body::-webkit-scrollbar-thumb { background: #1e3050; border-radius: 2px; }
+
+  /* Compact device cards inside the sheet */
+  .mobile-sheet-body .device-card {
+    margin-bottom: 6px;
+  }
+
+  /* Trip and commands controls in sheet */
+  .mobile-sheet-body .trip-panel,
+  .mobile-sheet-body .map-controls {
+    border: none;
+    background: transparent;
+    padding: 4px 0;
+  }
+}

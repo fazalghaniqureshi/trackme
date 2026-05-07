@@ -16,6 +16,13 @@ dist-ssr
 .oci/
 *.pem
 
+# Script logs
+scripts/*.log
+scripts/*-err.log
+
+# Playwright artifacts
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
