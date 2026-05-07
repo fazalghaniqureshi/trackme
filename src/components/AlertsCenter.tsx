@@ -7,9 +7,14 @@ import { getAllDrivers } from "../services/driverService";
 import { getTraccarEvents, isTraccarConfigured } from "../services/traccarService";
 import { EVENT_META, knotsToKmh } from "../types/event";
 import type { Device } from "../types/device";
+import StatCard from './StatCard';
+import EmptyState from './EmptyState';
+import Pagination from './Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { sendNotification, requestNotificationPermission } from '../utils/notifications';
 
 type AlertSeverity = "danger" | "warning" | "info";
-type AlertCategory = "maintenance" | "driver" | "traccar";
+type AlertCategory = "maintenance" | "driver" | "traccar" | "idle";
 
 interface AlertItem {
   id: string;
@@ -30,6 +35,7 @@ const CATEGORY_LABEL: Record<AlertCategory, string> = {
   maintenance: "Maintenance",
   driver: "Driver",
   traccar: "Vehicle Event",
+  idle: "Idle",
 };
 
 const AlertsCenter = () => {
@@ -141,17 +147,68 @@ const AlertsCenter = () => {
         });
       }
 
+      // ── Idle detection ───────────────────────────────────────────
+      const IDLE_THRESHOLD_MINUTES = 5;
+      if (isTraccarConfigured()) {
+        const now = new Date();
+        const from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        for (const device of devices) {
+          if (!device.traccarId) continue;
+          try {
+            const evts = await getTraccarEvents(device.traccarId, from, now);
+            let idleStart: Date | null = null;
+            for (const evt of evts) {
+              const attrs = (evt as any).attributes ?? {};
+              const speed = typeof attrs.speed === 'number' ? attrs.speed : 0;
+              const ignition = attrs.ignition === true;
+              if (ignition && speed < 1) {
+                if (!idleStart) idleStart = new Date(evt.eventTime);
+              } else {
+                if (idleStart) {
+                  const idleMin = (new Date(evt.eventTime).getTime() - idleStart.getTime()) / 60000;
+                  if (idleMin >= IDLE_THRESHOLD_MINUTES) {
+                    result.push({
+                      id: `idle-${device.id}-${idleStart.getTime()}`,
+                      severity: "warning",
+                      category: "idle",
+                      title: `Idle: ${deviceName(device.id)}`,
+                      detail: `Engine on, stationary for ${Math.round(idleMin)} min`,
+                      timestamp: idleStart,
+                    });
+                  }
+                  idleStart = null;
+                }
+              }
+            }
+          } catch {
+            // skip if events unavailable
+          }
+        }
+      }
+
       result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
       setAlerts(result);
       setLastRefresh(new Date());
+
+      const critical = result.filter((a) => a.severity === "danger");
+      if (critical.length > 0) {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          critical.slice(0, 3).forEach((a) =>
+            sendNotification(`Alert: ${a.title}`, a.detail, a.id)
+          );
+        }
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const filtered = alerts
+  const filteredAlerts = alerts
     .filter((a) => filterSeverity === "all" || a.severity === filterSeverity)
     .filter((a) => filterCategory === "all" || a.category === filterCategory);
+
+  const { page, totalPages, paged: pagedAlerts, setPage } = usePagination(filteredAlerts);
 
   const dangerCount = alerts.filter((a) => a.severity === "danger").length;
   const warningCount = alerts.filter((a) => a.severity === "warning").length;
@@ -178,23 +235,12 @@ const AlertsCenter = () => {
       {/* KPI summary */}
       <div className="row g-3 mb-4">
         {[
-          { label: "Critical", count: dangerCount, color: "danger", severity: "danger" as AlertSeverity },
-          { label: "Warnings", count: warningCount, color: "warning", severity: "warning" as AlertSeverity },
-          { label: "Info", count: infoCount, color: "info", severity: "info" as AlertSeverity },
+          { label: "Critical", value: alerts.filter((a) => a.severity === "danger").length, color: "var(--c-danger)" },
+          { label: "Warnings", value: alerts.filter((a) => a.severity === "warning").length, color: "var(--c-warning)" },
+          { label: "Info", value: alerts.filter((a) => a.severity === "info").length, color: "var(--c-accent)" },
         ].map((c) => (
           <div key={c.label} className="col-4">
-            <div
-              className={`card text-white bg-${c.color} h-100`}
-              style={{ cursor: "pointer" }}
-              onClick={() =>
-                setFilterSeverity((prev) => (prev === c.severity ? "all" : c.severity))
-              }
-            >
-              <div className="card-body py-3">
-                <div className="small opacity-75">{c.label}</div>
-                <div className="fs-3 fw-bold">{c.count}</div>
-              </div>
-            </div>
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>
@@ -227,6 +273,7 @@ const AlertsCenter = () => {
                 <option value="maintenance">Maintenance</option>
                 <option value="driver">Driver</option>
                 <option value="traccar">Vehicle Events</option>
+                <option value="idle">Idle</option>
               </select>
             </div>
             <div className="col-md-2">
@@ -238,7 +285,7 @@ const AlertsCenter = () => {
               </button>
             </div>
             <div className="col-md-2 text-end">
-              <small className="text-muted">{filtered.length} alert{filtered.length !== 1 ? "s" : ""}</small>
+              <small className="text-muted">{filteredAlerts.length} alert{filteredAlerts.length !== 1 ? "s" : ""}</small>
             </div>
           </div>
         </div>
@@ -252,61 +299,61 @@ const AlertsCenter = () => {
               <div className="spinner-border me-2" />
               <p className="mt-2 mb-0">Loading alerts…</p>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-5 text-muted">
-              <div className="fs-1 mb-2">✓</div>
-              <p className="mb-0">
-                {alerts.length === 0
-                  ? "No active alerts — everything looks good!"
-                  : "No alerts match the current filters."}
-              </p>
-            </div>
+          ) : filteredAlerts.length === 0 ? (
+            <EmptyState
+              icon={<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+              title="No active alerts"
+              message="Everything looks good — no maintenance, driver, or vehicle alerts."
+            />
           ) : (
-            <ul className="list-group list-group-flush">
-              {filtered.map((alert) => (
-                <li
-                  key={alert.id}
-                  className={`list-group-item list-group-item-action border-start border-${alert.severity} border-3`}
-                  style={{ borderLeftWidth: "4px !important" }}
-                >
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div className="d-flex align-items-start gap-2 flex-wrap">
-                      <span className={`badge bg-${alert.severity} mt-1`}>
-                        {SEVERITY_LABEL[alert.severity]}
-                      </span>
-                      <span className="badge bg-secondary mt-1">
-                        {CATEGORY_LABEL[alert.category]}
-                      </span>
-                      <div>
-                        <div className="fw-semibold">{alert.title}</div>
-                        <div className="text-muted small">{alert.detail}</div>
+            <>
+              <ul className="list-group list-group-flush">
+                {pagedAlerts.map((alert) => (
+                  <li
+                    key={alert.id}
+                    className={`list-group-item list-group-item-action border-start border-${alert.severity} border-3`}
+                    style={{ borderLeftWidth: "4px !important" }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start">
+                      <div className="d-flex align-items-start gap-2 flex-wrap">
+                        <span className={`badge bg-${alert.severity} mt-1`}>
+                          {SEVERITY_LABEL[alert.severity]}
+                        </span>
+                        <span className="badge bg-secondary mt-1">
+                          {CATEGORY_LABEL[alert.category]}
+                        </span>
+                        <div>
+                          <div className="fw-semibold">{alert.title}</div>
+                          <div className="text-muted small">{alert.detail}</div>
+                        </div>
+                      </div>
+                      <div className="d-flex flex-column align-items-end gap-1 ms-3">
+                        <small className="text-muted text-nowrap">
+                          {format(alert.timestamp, "MMM d, HH:mm")}
+                        </small>
+                        {alert.category === "maintenance" && (
+                          <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => navigate("/maintenance")}
+                          >
+                            View
+                          </button>
+                        )}
+                        {alert.category === "driver" && (
+                          <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => navigate("/drivers")}
+                          >
+                            View
+                          </button>
+                        )}
                       </div>
                     </div>
-                    <div className="d-flex flex-column align-items-end gap-1 ms-3">
-                      <small className="text-muted text-nowrap">
-                        {format(alert.timestamp, "MMM d, HH:mm")}
-                      </small>
-                      {alert.category === "maintenance" && (
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate("/maintenance")}
-                        >
-                          View
-                        </button>
-                      )}
-                      {alert.category === "driver" && (
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => navigate("/drivers")}
-                        >
-                          View
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+              <Pagination page={page} totalPages={totalPages} onPage={setPage} />
+            </>
           )}
         </div>
       </div>
