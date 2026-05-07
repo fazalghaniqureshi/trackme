@@ -9,6 +9,11 @@ import {
   getFleetFuelStats,
 } from "../services/fuelService";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
+import StatCard from './StatCard';
+import EmptyState from './EmptyState';
+import Pagination from './Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { formatCurrency } from '../utils/format';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -68,6 +73,8 @@ const FuelLog = () => {
       const diff = new Date(b.date).getTime() - new Date(a.date).getTime();
       return diff !== 0 ? diff : b.odometer - a.odometer;
     });
+
+  const { page, totalPages, paged: pagedEntries, setPage } = usePagination(filteredEntries);
 
   const filteredTotalLiters = filteredEntries.reduce((s, e) => s + e.liters, 0);
   const filteredTotalCost = filteredEntries.reduce((s, e) => s + e.totalCost, 0);
@@ -177,36 +184,13 @@ const FuelLog = () => {
       {/* KPI cards */}
       <div className="row g-3 mb-4">
         {[
-          { label: "Total Fill-Ups", value: stats.totalFillUps, color: "primary", suffix: "" },
-          {
-            label: "Total Fuel",
-            value: stats.totalLiters.toFixed(1),
-            color: "info",
-            suffix: " L",
-          },
-          {
-            label: "Total Fuel Cost",
-            value: stats.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            color: "warning",
-            suffix: "",
-          },
-          {
-            label: "Avg Efficiency",
-            value: stats.avgEfficiency != null ? stats.avgEfficiency.toFixed(2) : "—",
-            color: "success",
-            suffix: stats.avgEfficiency != null ? " km/L" : "",
-          },
+          { label: "Total Fill-Ups", value: stats.totalFillUps, color: "var(--c-accent)" },
+          { label: "Total Fuel", value: stats.totalLiters.toFixed(1), unit: "L" },
+          { label: "Total Fuel Cost", value: formatCurrency(stats.totalCost) },
+          { label: "Avg Efficiency", value: stats.avgEfficiency != null ? stats.avgEfficiency.toFixed(2) : "—", unit: stats.avgEfficiency != null ? "km/L" : "", color: "var(--c-success)" },
         ].map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <div className={`card text-white bg-${c.color} h-100`}>
-              <div className="card-body py-3">
-                <div className="small opacity-75">{c.label}</div>
-                <div className="fs-4 fw-bold">
-                  {c.value}
-                  {c.suffix}
-                </div>
-              </div>
-            </div>
+            <StatCard label={c.label} value={c.value} color={(c as any).color} unit={(c as any).unit} />
           </div>
         ))}
       </div>
@@ -277,7 +261,7 @@ const FuelLog = () => {
           )}
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-responsive table-responsive-mobile">
             <table className="table table-hover mb-0">
               <thead className="table-light">
                 <tr>
@@ -300,55 +284,55 @@ const FuelLog = () => {
                       Loading…
                     </td>
                   </tr>
-                ) : filteredEntries.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="text-center text-muted py-4">
-                      No fuel records yet. Click "+ Log Fill-Up" to get started.
+                ) : pagedEntries.length === 0 ? (
+                  <tr><td colSpan={9}>
+                    <EmptyState
+                      icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 22V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v15"/><path d="M2 22h14"/><path d="M15 7h2a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9a7 7 0 0 0-7-7H15"/><line x1="6" y1="11" x2="12" y2="11"/></svg>}
+                      title="No fuel records yet"
+                      message="Log your first fill-up to start tracking fuel costs and efficiency."
+                      action={{ label: "+ Log Fill-Up", onClick: handleOpenAdd }}
+                    />
+                  </td></tr>
+                ) : pagedEntries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="fw-semibold">{getDeviceName(entry.deviceId)}</td>
+                    <td>{entry.date}</td>
+                    <td>{entry.liters.toFixed(1)} L</td>
+                    <td>{formatCurrency(entry.costPerLiter)}</td>
+                    <td className="fw-semibold">{formatCurrency(entry.totalCost)}</td>
+                    <td>{entry.odometer.toLocaleString()} km</td>
+                    <td>
+                      {entry.fuelEfficiency != null ? (
+                        <span className="badge bg-info text-dark">
+                          {entry.fuelEfficiency} km/L
+                        </span>
+                      ) : (
+                        <span className="badge bg-secondary">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <small className="text-muted">{entry.notes || "—"}</small>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-outline-primary me-1"
+                        onClick={() => handleOpenEdit(entry)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDelete(entry)}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
-                ) : (
-                  filteredEntries.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="fw-semibold">{getDeviceName(entry.deviceId)}</td>
-                      <td>{entry.date}</td>
-                      <td>{entry.liters.toFixed(1)} L</td>
-                      <td>{entry.costPerLiter.toFixed(2)}</td>
-                      <td className="fw-semibold">
-                        {entry.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td>{entry.odometer.toLocaleString()} km</td>
-                      <td>
-                        {entry.fuelEfficiency != null ? (
-                          <span className="badge bg-info text-dark">
-                            {entry.fuelEfficiency} km/L
-                          </span>
-                        ) : (
-                          <span className="badge bg-secondary">—</span>
-                        )}
-                      </td>
-                      <td>
-                        <small className="text-muted">{entry.notes || "—"}</small>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-1"
-                          onClick={() => handleOpenEdit(entry)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(entry)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
+          <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
 
