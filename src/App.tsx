@@ -13,6 +13,7 @@ import FuelLog from "./components/FuelLog";
 import AlertsCenter from "./components/AlertsCenter";
 import ExpenseTracker from "./components/ExpenseTracker";
 import VehicleProfile from "./components/VehicleProfile";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
@@ -21,18 +22,18 @@ function App() {
         <Navigation />
         <main className="app-content">
           <Routes>
-            <Route path="/" element={<MapView />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/traccar" element={<TraccarSettings />} />
-            <Route path="/geofences" element={<GeofenceManager />} />
-            <Route path="/drivers" element={<DriverManager />} />
-            <Route path="/maintenance" element={<MaintenanceTracker />} />
-            <Route path="/fuel" element={<FuelLog />} />
-            <Route path="/alerts" element={<AlertsCenter />} />
-            <Route path="/expenses" element={<ExpenseTracker />} />
-            <Route path="/vehicles/:id" element={<VehicleProfile />} />
+            <Route path="/" element={<ErrorBoundary><MapView /></ErrorBoundary>} />
+            <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/admin" element={<ErrorBoundary><AdminPanel /></ErrorBoundary>} />
+            <Route path="/reports" element={<ErrorBoundary><Reports /></ErrorBoundary>} />
+            <Route path="/traccar" element={<ErrorBoundary><TraccarSettings /></ErrorBoundary>} />
+            <Route path="/geofences" element={<ErrorBoundary><GeofenceManager /></ErrorBoundary>} />
+            <Route path="/drivers" element={<ErrorBoundary><DriverManager /></ErrorBoundary>} />
+            <Route path="/maintenance" element={<ErrorBoundary><MaintenanceTracker /></ErrorBoundary>} />
+            <Route path="/fuel" element={<ErrorBoundary><FuelLog /></ErrorBoundary>} />
+            <Route path="/alerts" element={<ErrorBoundary><AlertsCenter /></ErrorBoundary>} />
+            <Route path="/expenses" element={<ErrorBoundary><ExpenseTracker /></ErrorBoundary>} />
+            <Route path="/vehicles/:id" element={<ErrorBoundary><VehicleProfile /></ErrorBoundary>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
