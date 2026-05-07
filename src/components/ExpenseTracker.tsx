@@ -10,6 +10,11 @@ import {
   getFleetExpenseStats,
 } from "../services/expenseService";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
+import StatCard from './StatCard';
+import EmptyState from './EmptyState';
+import Pagination from './Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { formatCurrency } from '../utils/format';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -81,6 +86,8 @@ const ExpenseTracker = () => {
     .filter((e) => !filterFrom || e.date >= filterFrom)
     .filter((e) => !filterTo || e.date <= filterTo)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const { page, totalPages, paged: pagedEntries, setPage } = usePagination(filteredEntries);
 
   const filteredTotal = filteredEntries.reduce((s, e) => s + e.amount, 0);
 
@@ -166,38 +173,16 @@ const ExpenseTracker = () => {
 
       {/* KPI cards */}
       <div className="row g-3 mb-4">
-        <div className="col-6 col-md-3">
-          <div className="card text-white bg-primary h-100">
-            <div className="card-body py-3">
-              <div className="small opacity-75">Total Expenses</div>
-              <div className="fs-4 fw-bold">{fmt(stats.totalExpenses)}</div>
-            </div>
+        {[
+          { label: "Total Expenses", value: formatCurrency(stats.totalExpenses) },
+          { label: "Total Records", value: stats.totalCount, color: "var(--c-accent)" },
+          { label: "Top Category", value: stats.mostExpensiveCategory ?? "—" },
+          { label: "This Month", value: formatCurrency(thisMonthTotal) },
+        ].map((c) => (
+          <div key={c.label} className="col-6 col-md-3">
+            <StatCard label={c.label} value={c.value} color={(c as any).color} />
           </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="card text-white bg-secondary h-100">
-            <div className="card-body py-3">
-              <div className="small opacity-75">Total Records</div>
-              <div className="fs-4 fw-bold">{stats.totalCount}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="card text-white bg-warning h-100">
-            <div className="card-body py-3">
-              <div className="small opacity-75">Top Category</div>
-              <div className="fs-4 fw-bold">{stats.mostExpensiveCategory ?? "—"}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="card text-white bg-info h-100">
-            <div className="card-body py-3">
-              <div className="small opacity-75">This Month</div>
-              <div className="fs-4 fw-bold">{fmt(thisMonthTotal)}</div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filters */}
@@ -248,7 +233,7 @@ const ExpenseTracker = () => {
           )}
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-responsive table-responsive-mobile">
             <table className="table table-hover mb-0">
               <thead className="table-light">
                 <tr>
@@ -268,35 +253,37 @@ const ExpenseTracker = () => {
                       <div className="spinner-border spinner-border-sm me-2" />Loading…
                     </td>
                   </tr>
-                ) : filteredEntries.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-muted py-4">
-                      No expenses yet. Click "+ Add Expense" to get started.
+                ) : pagedEntries.length === 0 ? (
+                  <tr><td colSpan={7}>
+                    <EmptyState
+                      icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+                      title="No expenses yet"
+                      message="Log your first expense to start tracking vehicle costs."
+                      action={{ label: "+ Add Expense", onClick: handleOpenAdd }}
+                    />
+                  </td></tr>
+                ) : pagedEntries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="fw-semibold">{getDeviceName(entry.deviceId)}</td>
+                    <td>
+                      <span className={`badge bg-${CATEGORY_COLORS[entry.category]}`}>
+                        {entry.category}
+                      </span>
+                    </td>
+                    <td>{entry.date}</td>
+                    <td className="fw-semibold">{formatCurrency(entry.amount)}</td>
+                    <td>{entry.description || <span className="text-muted">—</span>}</td>
+                    <td><small className="text-muted">{entry.notes || "—"}</small></td>
+                    <td>
+                      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleOpenEdit(entry)}>Edit</button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(entry)}>Delete</button>
                     </td>
                   </tr>
-                ) : (
-                  filteredEntries.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="fw-semibold">{getDeviceName(entry.deviceId)}</td>
-                      <td>
-                        <span className={`badge bg-${CATEGORY_COLORS[entry.category]}`}>
-                          {entry.category}
-                        </span>
-                      </td>
-                      <td>{entry.date}</td>
-                      <td className="fw-semibold">{fmt(entry.amount)}</td>
-                      <td>{entry.description || <span className="text-muted">—</span>}</td>
-                      <td><small className="text-muted">{entry.notes || "—"}</small></td>
-                      <td>
-                        <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleOpenEdit(entry)}>Edit</button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(entry)}>Delete</button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
+          <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
 
