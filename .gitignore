@@ -23,6 +23,9 @@ scripts/*-err.log
 # Playwright artifacts
 .playwright-mcp/
 
+# Brainstorm sessions
+.superpowers/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
