@@ -8,6 +8,10 @@ import {
   deleteDriver,
 } from "../services/driverService";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
+import StatCard from './StatCard';
+import EmptyState from './EmptyState';
+import Pagination from './Pagination';
+import { usePagination } from '../hooks/usePagination';
 
 const EMPTY_FORM: DriverFormData = {
   name: "",
@@ -145,6 +149,9 @@ const DriverManager = () => {
     setToast({ type: "success", text: `"${driver.name}" deleted.` });
   };
 
+  const filteredDrivers = drivers;
+  const { page, totalPages, paged: pagedDrivers, setPage } = usePagination(filteredDrivers);
+
   const assigned = drivers.filter((d) => d.assignedDeviceId).length;
   const expiringSoon = drivers.filter((d) => {
     const days = daysUntil(d.licenseExpiry);
@@ -172,18 +179,13 @@ const DriverManager = () => {
       {/* KPI cards */}
       <div className="row g-3 mb-4">
         {[
-          { label: "Total Drivers", value: drivers.length, color: "primary" },
-          { label: "Assigned", value: assigned, color: "success" },
-          { label: "Unassigned", value: drivers.length - assigned, color: "secondary" },
-          { label: "License Expiring Soon", value: expiringSoon, color: "warning" },
+          { label: "Total Drivers", value: drivers.length, color: "var(--c-accent)" },
+          { label: "Assigned", value: drivers.filter((d) => d.assignedDeviceId).length, color: "var(--c-success)" },
+          { label: "Unassigned", value: drivers.filter((d) => !d.assignedDeviceId).length },
+          { label: "License Expiring Soon", value: drivers.filter((d) => { const days = Math.ceil((new Date(d.licenseExpiry).getTime() - Date.now()) / 86400000); return days >= 0 && days <= 30; }).length, color: "var(--c-warning)" },
         ].map((c) => (
           <div key={c.label} className="col-6 col-md-3">
-            <div className={`card text-white bg-${c.color} h-100`}>
-              <div className="card-body py-3">
-                <div className="small opacity-75">{c.label}</div>
-                <div className="fs-4 fw-bold">{c.value}</div>
-              </div>
-            </div>
+            <StatCard label={c.label} value={c.value} color={(c as any).color} />
           </div>
         ))}
       </div>
@@ -194,7 +196,7 @@ const DriverManager = () => {
           <strong>Registered Drivers ({drivers.length})</strong>
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-responsive table-responsive-mobile">
             <table className="table table-hover mb-0">
               <thead className="table-light">
                 <tr>
@@ -215,56 +217,58 @@ const DriverManager = () => {
                       Loading…
                     </td>
                   </tr>
-                ) : drivers.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center text-muted py-4">
-                      No drivers yet. Click "+ Add Driver" to get started.
-                    </td>
-                  </tr>
-                ) : (
-                  drivers.map((driver) => {
-                    const vehicleName = getDeviceName(driver.assignedDeviceId);
-                    return (
-                      <tr key={driver.id}>
-                        <td className="fw-semibold">{driver.name}</td>
-                        <td>
-                          <code>{driver.licenseNumber}</code>
-                        </td>
-                        <td>
-                          <LicenseBadge expiry={driver.licenseExpiry} />
-                        </td>
-                        <td>{driver.phone}</td>
-                        <td>
-                          <small>{driver.email}</small>
-                        </td>
-                        <td>
-                          {vehicleName ? (
-                            <span className="badge bg-primary">{vehicleName}</span>
-                          ) : (
-                            <span className="badge bg-secondary">Unassigned</span>
-                          )}
-                        </td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-outline-primary me-1"
-                            onClick={() => handleOpenEdit(driver)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(driver)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+                ) : pagedDrivers.length === 0 ? (
+                  <tr><td colSpan={7}>
+                    <EmptyState
+                      icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                      title="No drivers yet"
+                      message="Add your first driver to start managing your fleet."
+                      action={{ label: "+ Add Driver", onClick: handleOpenAdd }}
+                    />
+                  </td></tr>
+                ) : pagedDrivers.map((driver) => {
+                  const vehicleName = getDeviceName(driver.assignedDeviceId);
+                  return (
+                    <tr key={driver.id}>
+                      <td className="fw-semibold">{driver.name}</td>
+                      <td>
+                        <code>{driver.licenseNumber}</code>
+                      </td>
+                      <td>
+                        <LicenseBadge expiry={driver.licenseExpiry} />
+                      </td>
+                      <td>{driver.phone}</td>
+                      <td>
+                        <small>{driver.email}</small>
+                      </td>
+                      <td>
+                        {vehicleName ? (
+                          <span className="badge bg-primary">{vehicleName}</span>
+                        ) : (
+                          <span className="badge bg-secondary">Unassigned</span>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-outline-primary me-1"
+                          onClick={() => handleOpenEdit(driver)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(driver)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+          <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
 
