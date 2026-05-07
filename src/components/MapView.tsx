@@ -34,6 +34,7 @@ import type { TraccarGeofence } from "../types/geofence";
 import { calculateDistance } from "../services/analyticsService";
 import { reverseGeocode } from "../services/geocodingService";
 import { useNavigate } from "react-router-dom";
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -751,10 +752,14 @@ const MapView = () => {
         </div>
 
         {/* ── Map ── */}
-        {devices.length > 0 ? (
+        <div className="map-area">
           <MapContainer
-            center={selectedDevice?.coords ?? devices[0].coords}
-            zoom={14}
+            center={
+              devices.length > 0
+                ? (selectedDevice?.coords ?? devices[0].coords)
+                : [30.3753, 69.3451]
+            }
+            zoom={devices.length > 0 ? 14 : 6}
             className="map"
           >
             <TileLayer attribution={tile.attribution} url={tile.url} />
@@ -815,55 +820,57 @@ const MapView = () => {
             )}
 
             {/* Device markers */}
-            {devices.map((device) => (
-              <Marker
-                key={device.id}
-                position={device.coords}
-                icon={makeIcon(device.id === selectedId, isSpeeding(device))}
-                rotationAngle={device.angle}
-                rotationOrigin="center"
-                ref={(ref) => {
-                  if (ref) {
-                    markerRefs.current[device.id] = ref;
-                    if (ref.setRotationAngle) ref.setRotationAngle(device.angle ?? 0);
-                  }
-                }}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedId(device.id);
-                    setShouldFly(true);
-                  },
-                }}
-              >
-                <Popup>
-                  <div style={{ minWidth: 180 }}>
-                    <div className="fw-bold mb-1">{device.name}</div>
-                    <div className="text-muted small mb-1">
-                      {addresses[device.id] ?? `${device.coords[0].toFixed(5)}, ${device.coords[1].toFixed(5)}`}
-                    </div>
-                    <div className="d-flex gap-2 flex-wrap">
-                      {device.speed !== undefined && (
-                        <span className={`badge ${isSpeeding(device) ? "bg-danger" : "bg-primary"}`}>
-                          {device.speed.toFixed(0)} km/h
-                        </span>
-                      )}
-                      {device.battery !== undefined && (
-                        <span className="badge bg-secondary">{device.battery}% batt</span>
-                      )}
-                      <span className={`badge bg-${device.status === "online" ? "success" : "danger"}`}>
-                        {device.status}
-                      </span>
-                    </div>
-                    {device.lastUpdate && (
-                      <div className="text-muted small mt-1">
-                        {format(new Date(device.lastUpdate), "MMM d, HH:mm:ss")}
+            <MarkerClusterGroup chunkedLoading>
+              {devices.map((device) => (
+                <Marker
+                  key={device.id}
+                  position={device.coords}
+                  icon={makeIcon(device.id === selectedId, isSpeeding(device))}
+                  rotationAngle={device.angle}
+                  rotationOrigin="center"
+                  ref={(ref) => {
+                    if (ref) {
+                      markerRefs.current[device.id] = ref;
+                      if (ref.setRotationAngle) ref.setRotationAngle(device.angle ?? 0);
+                    }
+                  }}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedId(device.id);
+                      setShouldFly(true);
+                    },
+                  }}
+                >
+                  <Popup>
+                    <div style={{ minWidth: 180 }}>
+                      <div className="fw-bold mb-1">{device.name}</div>
+                      <div className="text-muted small mb-1">
+                        {addresses[device.id] ?? `${device.coords[0].toFixed(5)}, ${device.coords[1].toFixed(5)}`}
                       </div>
-                    )}
-                    <div className="text-muted small">IMEI: {device.imei}</div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                      <div className="d-flex gap-2 flex-wrap">
+                        {device.speed !== undefined && (
+                          <span className={`badge ${isSpeeding(device) ? "bg-danger" : "bg-primary"}`}>
+                            {device.speed.toFixed(0)} km/h
+                          </span>
+                        )}
+                        {device.battery !== undefined && (
+                          <span className="badge bg-secondary">{device.battery}% batt</span>
+                        )}
+                        <span className={`badge bg-${device.status === "online" ? "success" : "danger"}`}>
+                          {device.status}
+                        </span>
+                      </div>
+                      {device.lastUpdate && (
+                        <div className="text-muted small mt-1">
+                          {format(new Date(device.lastUpdate), "MMM d, HH:mm:ss")}
+                        </div>
+                      )}
+                      <div className="text-muted small">IMEI: {device.imei}</div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MarkerClusterGroup>
 
             {/* Fly-to triggers */}
             {selectedDevice && shouldFly && (
@@ -884,22 +891,27 @@ const MapView = () => {
               />
             )}
           </MapContainer>
-        ) : (
-          <div className="map d-flex align-items-center justify-content-center bg-light">
-            <div className="text-center text-muted">
-              <h5>No devices found</h5>
-              {isTraccarConfigured() ? (
-                <p>Add a device in the Admin Panel to start tracking.</p>
-              ) : (
-                <p>
-                  <button className="btn btn-primary" onClick={() => navigate("/traccar")}>
-                    Connect to Traccar
-                  </button>
-                </p>
-              )}
+          {!isTraccarConfigured() && (
+            <div className="map-offline-overlay">
+              <div className="map-offline-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
+                  strokeLinejoin="round">
+                  <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                  <line x1="8" y1="2" x2="8" y2="18" />
+                  <line x1="16" y1="6" x2="16" y2="22" />
+                </svg>
+              </div>
+              <div className="map-offline-title">Connect Traccar to see live devices</div>
+              <button
+                className="btn btn-primary btn-sm mt-2"
+                onClick={() => navigate("/traccar")}
+              >
+                Connect →
+              </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Mobile: bottom tab bar ─────────────────────── */}

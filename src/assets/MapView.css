@@ -228,10 +228,53 @@
 /* ── Playback controls ────────────────────────────────── */
 .playback-controls { margin-top: 9px; }
 
+/* ── Map area (always rendered wrapper) ───────────────── */
+.map-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+
 /* ── Map ──────────────────────────────────────────────── */
 .map {
   flex: 1;
   min-height: 0;
+}
+
+/* ── Offline overlay (shown when Traccar not configured) ─ */
+.map-offline-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: rgba(7, 14, 28, 0.82);
+  backdrop-filter: blur(6px);
+  border: 1px solid #1a2f4e;
+  border-radius: 12px;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  color: #e2eaf6;
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.map-offline-icon {
+  color: #3b82f6;
+  margin-bottom: 4px;
+}
+
+.map-offline-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #c8d8ee;
+  line-height: 1.4;
 }
 
 /* ── Mobile bar (hidden on desktop) ───────────────────── */
@@ -255,7 +298,12 @@
   /* Hide the desktop sidebar entirely */
   .sidebar { display: none; }
 
-  /* Map fills all space above the bottom bar */
+  /* Map area and map fill all space above the bottom bar */
+  .map-area {
+    flex: 1;
+    min-height: 0;
+  }
+
   .map {
     flex: 1;
     min-height: 0;
