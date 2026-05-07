@@ -20,6 +20,7 @@ import { knotsToKmh, metersToKm } from "../types/event";
 import type { FleetStatistics } from "../types/trip";
 import type { Device } from "../types/device";
 import AlertsFeed from "./AlertsFeed";
+import StatCard from "./StatCard";
 import { getOverdueRecords } from "../services/maintenanceService";
 import { getAllDrivers } from "../services/driverService";
 import { getAllFuelEntries } from "../services/fuelService";
@@ -173,20 +174,15 @@ const Dashboard = () => {
       {/* KPI cards */}
       <div className="row g-3 mb-4">
         {[
-          { label: "Total Devices", value: stats?.totalDevices ?? 0, color: "primary" },
-          { label: "Online", value: stats?.onlineDevices ?? 0, color: "success" },
-          { label: "Offline", value: stats?.offlineDevices ?? 0, color: "danger" },
-          { label: "Today's Distance", value: `${(stats?.totalDistance ?? 0).toFixed(1)} km`, color: "info" },
-          { label: "Max Speed Today", value: `${(stats?.maxSpeed ?? 0).toFixed(0)} km/h`, color: "warning" },
-          { label: "Avg Speed Today", value: `${(stats?.avgSpeed ?? 0).toFixed(0)} km/h`, color: "secondary" },
-        ].map((card) => (
-          <div key={card.label} className="col-6 col-md-4 col-xl-2">
-            <div className={`card text-white bg-${card.color} h-100`}>
-              <div className="card-body py-3">
-                <div className="small opacity-75">{card.label}</div>
-                <div className="fs-4 fw-bold">{card.value}</div>
-              </div>
-            </div>
+          { label: "Total Devices", value: devices.length, color: "var(--c-accent)" },
+          { label: "Online", value: devices.filter((d) => d.status === "online").length, color: "var(--c-success)" },
+          { label: "Offline", value: devices.filter((d) => d.status === "offline").length, color: "var(--c-danger)" },
+          { label: "Today's Distance", value: stats ? stats.totalDistance.toFixed(1) : "0.0", unit: "km" },
+          { label: "Max Speed Today", value: stats ? stats.maxSpeed.toFixed(0) : "0", unit: "km/h" },
+          { label: "Avg Speed Today", value: stats ? stats.avgSpeed.toFixed(0) : "0", unit: "km/h" },
+        ].map((c) => (
+          <div key={c.label} className="col-6 col-md-2">
+            <StatCard label={c.label} value={c.value} color={(c as any).color} unit={(c as any).unit} />
           </div>
         ))}
       </div>
@@ -197,45 +193,13 @@ const Dashboard = () => {
           <h6 className="text-muted text-uppercase fw-semibold mb-0">Fleet Health</h6>
         </div>
         {[
-          {
-            label: "Overdue Maintenance",
-            value: overdueCount,
-            color: overdueCount > 0 ? "danger" : "success",
-            route: "/maintenance",
-          },
-          {
-            label: "Licenses Expiring (30d)",
-            value: expiringLicenses,
-            color: expiringLicenses > 0 ? "warning" : "success",
-            route: "/alerts",
-          },
-          {
-            label: "Active Drivers",
-            value: activeDrivers,
-            color: "info",
-            route: "/drivers",
-          },
-          {
-            label: "Fuel Cost This Month",
-            value: fuelThisMonth.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
-            color: "secondary",
-            route: "/expenses",
-          },
-        ].map((card) => (
-          <div key={card.label} className="col-6 col-md-3">
-            <div
-              className={`card text-white bg-${card.color} h-100`}
-              style={{ cursor: "pointer" }}
-              onClick={() => navigate(card.route)}
-            >
-              <div className="card-body py-3">
-                <div className="small opacity-75">{card.label}</div>
-                <div className="fs-4 fw-bold">{card.value}</div>
-              </div>
-            </div>
+          { label: "Overdue Maintenance", value: overdueCount, color: overdueCount > 0 ? "var(--c-danger)" : "var(--c-success)" },
+          { label: "Licenses Expiring (30d)", value: expiringLicenses, color: expiringLicenses > 0 ? "var(--c-warning)" : "var(--c-success)" },
+          { label: "Active Drivers", value: activeDrivers, color: "var(--c-accent)" },
+          { label: "Fuel Cost This Month", value: `Rs. ${fuelThisMonth.toFixed(2)}` },
+        ].map((c) => (
+          <div key={c.label} className="col-6 col-md-3">
+            <StatCard label={c.label} value={c.value} color={(c as any).color} />
           </div>
         ))}
       </div>
