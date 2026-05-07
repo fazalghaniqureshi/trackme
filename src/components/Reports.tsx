@@ -15,12 +15,20 @@ import type { Device } from "../types/device";
 
 type ReportTab = "trips" | "summary" | "events";
 
+const getPresetDates = (preset: "today" | "week" | "month") => {
+  const now = new Date();
+  if (preset === "today") return { from: format(now, "yyyy-MM-dd"), to: format(now, "yyyy-MM-dd") };
+  if (preset === "week") return { from: format(subDays(now, 7), "yyyy-MM-dd"), to: format(now, "yyyy-MM-dd") };
+  return { from: format(new Date(now.getFullYear(), now.getMonth(), 1), "yyyy-MM-dd"), to: format(now, "yyyy-MM-dd") };
+};
+
 const Reports = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>("all");
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 7), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [activeTab, setActiveTab] = useState<ReportTab>("trips");
+  const [preset, setPreset] = useState<"today" | "week" | "month" | "custom">("week");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,6 +95,13 @@ const Reports = () => {
     }
   };
 
+  const applyPreset = (p: "today" | "week" | "month") => {
+    setPreset(p);
+    const { from, to } = getPresetDates(p);
+    setStartDate(from);
+    setEndDate(to);
+  };
+
   const getDeviceName = (deviceId: number) =>
     devices.find((d) => d.traccarId === deviceId)?.name ?? `Device ${deviceId}`;
 
@@ -135,6 +150,17 @@ const Reports = () => {
       {/* Filters */}
       <div className="card mb-4">
         <div className="card-body">
+          <div className="d-flex gap-2 mb-3 flex-wrap">
+            {(["today", "week", "month", "custom"] as const).map((p) => (
+              <button
+                key={p}
+                className={`btn btn-sm ${preset === p ? "btn-primary" : "btn-outline-secondary"}`}
+                onClick={() => p === "custom" ? setPreset("custom") : applyPreset(p)}
+              >
+                {p === "today" ? "Today" : p === "week" ? "This Week" : p === "month" ? "This Month" : "Custom"}
+              </button>
+            ))}
+          </div>
           <div className="row g-3">
             <div className="col-md-4">
               <label className="form-label fw-semibold">Device</label>
@@ -151,24 +177,28 @@ const Reports = () => {
                 ))}
               </select>
             </div>
-            <div className="col-md-3">
-              <label className="form-label fw-semibold">Start Date</label>
-              <input
-                type="date"
-                className="form-control"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label fw-semibold">End Date</label>
-              <input
-                type="date"
-                className="form-control"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
+            {preset === "custom" && (
+              <>
+                <div className="col-md-3">
+                  <label className="form-label fw-semibold">Start Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label fw-semibold">End Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
             <div className="col-md-2 d-flex align-items-end">
               <button className="btn btn-primary w-100" onClick={loadData} disabled={loading}>
                 {loading ? <span className="spinner-border spinner-border-sm me-1" /> : null}
