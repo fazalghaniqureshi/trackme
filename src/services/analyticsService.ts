@@ -1,5 +1,4 @@
-import type { Device } from "../types/device";
-import type { Trip, FleetStatistics } from "../types/trip";
+import type { FleetStatistics } from "../types/trip";
 import { getAllDevices } from "./deviceService";
 import { getAllTrips, getActiveTrips } from "./tripService";
 

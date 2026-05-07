@@ -10,7 +10,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
@@ -249,8 +248,8 @@ const Dashboard = () => {
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                    label={({ name, percent }: { name?: string; percent?: number }) =>
+                      `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }
                   >
                     {statusData.map((_, i) => (

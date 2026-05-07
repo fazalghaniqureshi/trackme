@@ -152,12 +152,6 @@ const DriverManager = () => {
   const filteredDrivers = drivers;
   const { page, totalPages, paged: pagedDrivers, setPage } = usePagination(filteredDrivers);
 
-  const assigned = drivers.filter((d) => d.assignedDeviceId).length;
-  const expiringSoon = drivers.filter((d) => {
-    const days = daysUntil(d.licenseExpiry);
-    return days >= 0 && days <= 30;
-  }).length;
-
   return (
     <div className="container-fluid p-4">
       {/* Header */}

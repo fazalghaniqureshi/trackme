@@ -2,7 +2,6 @@ import type { Trip, LocationPoint } from "../types/trip";
 import { calculateDistance } from "./analyticsService";
 
 const TRIPS_STORAGE_KEY = "trackme_trips";
-const LOCATIONS_STORAGE_KEY = "trackme_locations";
 
 // Get all trips
 export const getAllTrips = (): Trip[] => {

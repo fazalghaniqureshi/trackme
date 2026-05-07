@@ -7,8 +7,6 @@ import {
   syncTraccarDevices,
 } from "../services/traccarService";
 import type { TraccarConfig } from "../services/traccarService";
-import { useNavigate } from "react-router-dom";
-
 const TraccarSettings = () => {
   const configuredServer =
     import.meta.env.VITE_TRACCAR_URL || "https://demo2.traccar.org";
@@ -21,7 +19,6 @@ const TraccarSettings = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const savedConfig = loadTraccarConfig();

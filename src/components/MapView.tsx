@@ -57,10 +57,10 @@ const playheadIcon = new L.DivIcon({
   html: `<div style="width:14px;height:14px;background:#f59e0b;border:3px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(0,0,0,.5)"></div>`,
   iconSize: [14, 14],
   iconAnchor: [7, 7],
-});
+}) as unknown as L.Icon;
 
 /** Returns a speeding-alert icon (car image + pulsing red dot overlay). */
-const makeSpeedingIcon = (selected: boolean): L.DivIcon => {
+const makeSpeedingIcon = (selected: boolean): L.Icon => {
   const src = selected ? carBlue : carGray;
   const size = selected ? 48 : 40;
   const anchor = size / 2;
@@ -69,10 +69,10 @@ const makeSpeedingIcon = (selected: boolean): L.DivIcon => {
     html: `<div style="position:relative;width:${size}px;height:${size}px"><img src="${src}" style="width:${size}px;height:${size}px" /><span class="speeding-badge"></span></div>`,
     iconSize: [size, size],
     iconAnchor: [anchor, anchor],
-  });
+  }) as unknown as L.Icon;
 };
 
-const makeIcon = (selected: boolean, speeding: boolean): L.Icon | L.DivIcon =>
+const makeIcon = (selected: boolean, speeding: boolean): L.Icon =>
   speeding ? makeSpeedingIcon(selected) : selected ? selectedIcon : defaultIcon;
 
 // ---------------------------------------------------------------------------
@@ -121,13 +121,13 @@ const bearingDeg = (a: [number, number], b: [number, number]): number => {
 };
 
 /** Arrow DivIcon rotated to bearing */
-const makeArrowIcon = (angle: number) =>
+const makeArrowIcon = (angle: number): L.Icon =>
   new L.DivIcon({
     className: "",
     html: `<div class="route-arrow" style="transform:rotate(${angle}deg)">▲</div>`,
     iconSize: [14, 14],
     iconAnchor: [7, 7],
-  });
+  }) as unknown as L.Icon;
 
 // ---------------------------------------------------------------------------
 // Map fly-to helper
@@ -828,7 +828,7 @@ const MapView = () => {
                   icon={makeIcon(device.id === selectedId, isSpeeding(device))}
                   rotationAngle={device.angle}
                   rotationOrigin="center"
-                  ref={(ref) => {
+                  ref={(ref: any) => {
                     if (ref) {
                       markerRefs.current[device.id] = ref;
                       if (ref.setRotationAngle) ref.setRotationAngle(device.angle ?? 0);

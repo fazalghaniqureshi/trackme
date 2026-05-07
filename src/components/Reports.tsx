@@ -7,7 +7,6 @@ import {
   getTraccarSummary,
   getTraccarEvents,
   isTraccarConfigured,
-  getTraccarLocationHistory,
 } from "../services/traccarService";
 import type { TraccarTripReport, TraccarSummaryReport, TraccarEvent } from "../types/event";
 import { knotsToKmh, metersToKm, msDuration, EVENT_META } from "../types/event";

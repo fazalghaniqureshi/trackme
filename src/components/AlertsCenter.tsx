@@ -211,9 +211,6 @@ const AlertsCenter = () => {
   const { page, totalPages, paged: pagedAlerts, setPage } = usePagination(filteredAlerts);
   useEffect(() => { setPage(1); }, [filterSeverity, filterCategory]);
 
-  const dangerCount = alerts.filter((a) => a.severity === "danger").length;
-  const warningCount = alerts.filter((a) => a.severity === "warning").length;
-  const infoCount = alerts.filter((a) => a.severity === "info").length;
 
   return (
     <div className="container-fluid p-4">
