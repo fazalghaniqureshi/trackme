@@ -11,6 +11,11 @@ import {
   getUpcomingRecords,
 } from "../services/maintenanceService";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
+import StatCard from './StatCard';
+import EmptyState from './EmptyState';
+import Pagination from './Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { formatCurrency } from '../utils/format';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -84,6 +89,8 @@ const MaintenanceTracker = () => {
     .filter((r) => filterDevice === "all" || r.deviceId === filterDevice)
     .filter((r) => filterType === "all" || r.serviceType === filterType)
     .sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime());
+
+  const { page, totalPages, paged: pagedRecords, setPage } = usePagination(filteredRecords);
 
   const totalCost = filteredRecords.reduce((s, r) => s + r.cost, 0);
 
@@ -191,6 +198,20 @@ const MaintenanceTracker = () => {
         </div>
       )}
 
+      {/* KPI cards */}
+      <div className="row g-3 mb-4">
+        {[
+          { label: "Total Records", value: records.length, color: "var(--c-accent)" },
+          { label: "Overdue", value: overdue.length, color: "var(--c-danger)" },
+          { label: "Due This Month", value: upcoming.length, color: "var(--c-warning)" },
+          { label: "Total Cost", value: formatCurrency(records.reduce((s, r) => s + (r.cost ?? 0), 0)) },
+        ].map((c) => (
+          <div key={c.label} className="col-6 col-md-3">
+            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+          </div>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="card mb-4">
         <div className="card-body">
@@ -239,7 +260,7 @@ const MaintenanceTracker = () => {
           <strong>Service Records ({filteredRecords.length})</strong>
         </div>
         <div className="card-body p-0">
-          <div className="table-responsive">
+          <div className="table-responsive table-responsive-mobile">
             <table className="table table-hover mb-0">
               <thead className="table-light">
                 <tr>
@@ -261,55 +282,57 @@ const MaintenanceTracker = () => {
                       Loading…
                     </td>
                   </tr>
-                ) : filteredRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center text-muted py-4">
-                      No service records yet. Click "+ Log Service" to get started.
+                ) : pagedRecords.length === 0 ? (
+                  <tr><td colSpan={8}>
+                    <EmptyState
+                      icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>}
+                      title="No service records yet"
+                      message="Log your first service to start tracking maintenance costs."
+                      action={{ label: "+ Log Service", onClick: handleOpenAdd }}
+                    />
+                  </td></tr>
+                ) : pagedRecords.map((r) => (
+                  <tr key={r.id}>
+                    <td className="fw-semibold">{getDeviceName(r.deviceId)}</td>
+                    <td>
+                      <span className="badge bg-secondary">{r.serviceType}</span>
+                    </td>
+                    <td>{r.serviceDate}</td>
+                    <td>{r.odometer.toLocaleString()} km</td>
+                    <td>{formatCurrency(r.cost ?? 0)}</td>
+                    <td>
+                      <NextDueBadge date={r.nextDueDate} />
+                      {r.nextDueOdometer != null && (
+                        <div>
+                          <small className="text-muted">
+                            or {r.nextDueOdometer.toLocaleString()} km
+                          </small>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <small className="text-muted">{r.notes || "—"}</small>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-outline-primary me-1"
+                        onClick={() => handleOpenEdit(r)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDelete(r)}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
-                ) : (
-                  filteredRecords.map((r) => (
-                    <tr key={r.id}>
-                      <td className="fw-semibold">{getDeviceName(r.deviceId)}</td>
-                      <td>
-                        <span className="badge bg-secondary">{r.serviceType}</span>
-                      </td>
-                      <td>{r.serviceDate}</td>
-                      <td>{r.odometer.toLocaleString()} km</td>
-                      <td>{r.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td>
-                        <NextDueBadge date={r.nextDueDate} />
-                        {r.nextDueOdometer != null && (
-                          <div>
-                            <small className="text-muted">
-                              or {r.nextDueOdometer.toLocaleString()} km
-                            </small>
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <small className="text-muted">{r.notes || "—"}</small>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-outline-primary me-1"
-                          onClick={() => handleOpenEdit(r)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => handleDelete(r)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
+          <Pagination page={page} totalPages={totalPages} onPage={setPage} />
         </div>
       </div>
 
