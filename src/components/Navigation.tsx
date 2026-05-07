@@ -216,12 +216,20 @@ const Navigation = () => {
 
         {/* Footer status */}
         <div className="sidebar-footer">
-          <div className="sidebar-status">
-            <div className={`sidebar-status-dot ${connected ? "connected" : "disconnected"}`} />
-            <span style={{ fontSize: 12, color: "var(--c-muted)" }}>
-              {connected ? "Traccar Connected" : "Traccar Offline"}
-            </span>
-          </div>
+          {connected ? (
+            <div className="sidebar-status">
+              <div className="sidebar-status-dot connected" />
+              <span style={{ fontSize: 12, color: "var(--c-muted)" }}>Traccar Connected</span>
+            </div>
+          ) : (
+            <Link to="/traccar" className="sidebar-offline-card" onClick={close}>
+              <span className="sidebar-offline-dot" />
+              <div>
+                <div className="sidebar-offline-title">Traccar Offline</div>
+                <div className="sidebar-offline-sub">Tap to connect →</div>
+              </div>
+            </Link>
+          )}
         </div>
       </aside>
     </>
