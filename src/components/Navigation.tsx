@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { isTraccarConfigured } from "../services/traccarService";
+import { getMyRole, canManageUsers, isAdmin } from "../services/userService";
 
 // ── Inline SVG icon helper ────────────────────────────────────────────────────
 const Icon = ({ children }: { children: React.ReactNode }) => (
@@ -123,46 +124,47 @@ const Icons = {
   ),
 };
 
-// ── Nav structure ─────────────────────────────────────────────────────────────
-const NAV_GROUPS = [
-  {
-    label: "Live",
-    items: [
-      { to: "/", label: "Map View", icon: Icons.map },
-      { to: "/dashboard", label: "Dashboard", icon: Icons.dashboard },
-    ],
-  },
-  {
-    label: "Fleet",
-    items: [
-      { to: "/admin", label: "Devices", icon: Icons.devices },
-      { to: "/drivers", label: "Drivers", icon: Icons.drivers },
-      { to: "/geofences", label: "Geofences", icon: Icons.geofences },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { to: "/maintenance", label: "Maintenance", icon: Icons.maintenance },
-      { to: "/fuel", label: "Fuel Log", icon: Icons.fuel },
-      { to: "/expenses", label: "Expenses", icon: Icons.expenses },
-      { to: "/reports", label: "Reports", icon: Icons.reports },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { to: "/alerts", label: "Alerts", icon: Icons.alerts },
-      { to: "/traccar", label: "Traccar", icon: Icons.plug },
-    ],
-  },
-];
-
 // ── Component ─────────────────────────────────────────────────────────────────
 const Navigation = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const connected = isTraccarConfigured();
+
+  const navGroups = [
+    {
+      label: "Live",
+      items: [
+        { to: "/", label: "Map View", icon: Icons.map },
+        { to: "/dashboard", label: "Dashboard", icon: Icons.dashboard },
+      ],
+    },
+    {
+      label: "Fleet",
+      items: [
+        { to: "/admin", label: "Devices", icon: Icons.devices },
+        { to: "/drivers", label: "Drivers", icon: Icons.drivers },
+        { to: "/geofences", label: "Geofences", icon: Icons.geofences },
+        ...(canManageUsers() ? [{ to: "/users", label: "Users", icon: Icons.drivers }] : []),
+        ...(isAdmin() ? [{ to: "/groups", label: "Fleets", icon: Icons.dashboard }] : []),
+      ],
+    },
+    {
+      label: "Operations",
+      items: [
+        { to: "/maintenance", label: "Maintenance", icon: Icons.maintenance },
+        { to: "/fuel", label: "Fuel Log", icon: Icons.fuel },
+        { to: "/expenses", label: "Expenses", icon: Icons.expenses },
+        { to: "/reports", label: "Reports", icon: Icons.reports },
+      ],
+    },
+    {
+      label: "System",
+      items: [
+        { to: "/alerts", label: "Alerts", icon: Icons.alerts },
+        { to: "/traccar", label: "Traccar", icon: Icons.plug },
+      ],
+    },
+  ];
 
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -196,7 +198,7 @@ const Navigation = () => {
 
         {/* Nav groups */}
         <nav className="sidebar-nav">
-          {NAV_GROUPS.map((group) => (
+          {navGroups.map((group) => (
             <div key={group.label} className="nav-group">
               <div className="nav-group-label">{group.label}</div>
               {group.items.map((item) => (
