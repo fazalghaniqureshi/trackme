@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "TrackMe",
+    "slug": "trackme-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "trackme",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.trackme.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#080f1e"
+      },
+      "package": "com.trackme.mobile"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#3b82f6"
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": ""
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
