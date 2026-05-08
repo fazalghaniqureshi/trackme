@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/traccar/:path*", "destination": "http://62.238.24.10:8082/:path*" }
+  ]
+}

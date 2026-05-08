@@ -24,7 +24,7 @@ No test framework is configured.
 
 ### Traccar connection
 
-- Target server: `https://demo2.traccar.org` (set in `.env.local` as `VITE_TRACCAR_URL`) — **demo server only; for production deploy your own Traccar instance**
+- Target server: `http://62.238.24.10:8082` (Hetzner CX23, Helsinki) — set in `.env.local` as `VITE_TRACCAR_URL`. Vercel proxy rewrites `/traccar/*` → `http://62.238.24.10:8082/*`
 - Demo server causes devices to get stuck (TCP half-open session drop). Fix: self-hosted Traccar on a VPS with port 5027 open, FMC920 pointed at your IP
 - All REST calls go through the Vite proxy at `/traccar` → Traccar, using HTTP Basic auth (`Authorization: Basic base64(email:password)`)
 - WebSocket requires a cookie session (JSESSIONID) obtained by POSTing to `/api/session` with form-encoded credentials — `establishCookieSession()` in `traccarService.ts` handles this
