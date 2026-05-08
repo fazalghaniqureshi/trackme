@@ -14,6 +14,8 @@ import AlertsCenter from "./components/AlertsCenter";
 import ExpenseTracker from "./components/ExpenseTracker";
 import VehicleProfile from "./components/VehicleProfile";
 import ErrorBoundary from "./components/ErrorBoundary";
+import UserManagement from "./components/UserManagement";
+import GroupManagement from "./components/GroupManagement";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
             <Route path="/alerts" element={<ErrorBoundary><AlertsCenter /></ErrorBoundary>} />
             <Route path="/expenses" element={<ErrorBoundary><ExpenseTracker /></ErrorBoundary>} />
             <Route path="/vehicles/:id" element={<ErrorBoundary><VehicleProfile /></ErrorBoundary>} />
+            <Route path="/users" element={<ErrorBoundary><UserManagement /></ErrorBoundary>} />
+            <Route path="/groups" element={<ErrorBoundary><GroupManagement /></ErrorBoundary>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
