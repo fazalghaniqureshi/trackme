@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, FlatList, Pressable } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { UrlTile } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFleetPolling } from '../../hooks/useFleetPolling';
 import VehicleMarker from '../../components/VehicleMarker';
@@ -48,10 +48,17 @@ export default function ManagerMapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        mapType={mapType}
+        mapType="none"
         initialRegion={initialRegion}
         showsUserLocation={false}
       >
+        <UrlTile
+          urlTemplate={mapType === 'satellite'
+            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'}
+          maximumZ={19}
+          flipY={false}
+        />
         {devices.map((device) => (
           <VehicleMarker
             key={device.id}

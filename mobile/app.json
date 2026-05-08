@@ -24,12 +24,6 @@
           "icon": "./assets/notification-icon.png",
           "color": "#3b82f6"
         }
-      ],
-      [
-        "react-native-maps",
-        {
-          "googleMapsApiKey": ""
-        }
       ]
     ],
     "experiments": {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import MapView, { Polyline, Marker } from 'react-native-maps';
+import MapView, { Polyline, Marker, UrlTile } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 import { getDevices, getTrips } from '../../services/traccarService';
@@ -80,6 +80,7 @@ export default function ManagerTripsScreen() {
           {replayTrip && route.length > 0 && (
             <MapView
               style={{ flex: 1 }}
+              mapType="none"
               initialRegion={{
                 latitude: replayTrip.startLat,
                 longitude: replayTrip.startLon,
@@ -87,6 +88,7 @@ export default function ManagerTripsScreen() {
                 longitudeDelta: 0.05,
               }}
             >
+              <UrlTile urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" maximumZ={19} flipY={false} />
               <Polyline
                 coordinates={route.map((p) => ({ latitude: p.latitude, longitude: p.longitude }))}
                 strokeColor="#3b82f6"
