@@ -173,13 +173,15 @@ const UserManagement = () => {
       )}
 
       <div className="row g-3 mb-4">
-        {[
-          { label: "Fleet Managers", value: managerCount, color: "var(--c-accent)" },
-          { label: "Drivers", value: driverCount, color: "#8b5cf6" },
-          { label: "Total Users", value: users.length },
-        ].map((c) => (
+        {(
+          [
+            { label: "Fleet Managers", value: managerCount, color: "var(--c-accent)" as string | undefined },
+            { label: "Drivers", value: driverCount, color: "#8b5cf6" as string | undefined },
+            { label: "Total Users", value: users.length, color: undefined as string | undefined },
+          ] as { label: string; value: number; color?: string }[]
+        ).map((c) => (
           <div key={c.label} className="col-4">
-            <StatCard label={c.label} value={c.value} color={(c as any).color} />
+            <StatCard label={c.label} value={c.value} color={c.color} />
           </div>
         ))}
       </div>
