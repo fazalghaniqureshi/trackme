@@ -1,11 +1,12 @@
 """
-Oracle Cloud ARM Instance Auto-Retry Script
-Tries VM.Standard.A1.Flex every 5 minutes until a slot opens.
-Falls back to VM.Standard.E2.1.Micro if --micro flag is passed.
+Oracle Cloud Instance Auto-Retry Script
+Alternates between VM.Standard.A1.Flex (ARM, 4 OCPU/24GB) and
+VM.Standard.E2.1.Micro (x86, 1GB) every attempt until one opens up.
 
 Run with:
-  python retry-oracle-instance.py
-  python retry-oracle-instance.py --micro   (use x86 micro instead)
+  python retry-oracle-instance.py          (alternate both shapes)
+  python retry-oracle-instance.py --micro  (only E2.1.Micro)
+  python retry-oracle-instance.py --arm    (only A1.Flex)
 """
 
 import oci, time, sys, datetime
@@ -24,13 +25,16 @@ SSH_KEY    = (
 )
 
 # ARM (Always Free, 4 OCPU 24 GB)
-ARM_IMAGE  = "ocid1.image.oc1.ap-singapore-1.aaaaaaaalx7qs4u3onszbfy3bc3nyesnb5adfwtbjltzpbsyspym7edlsbma"
+ARM_IMAGE   = "ocid1.image.oc1.ap-singapore-1.aaaaaaaalx7qs4u3onszbfy3bc3nyesnb5adfwtbjltzpbsyspym7edlsbma"
+MICRO_IMAGE = "ocid1.image.oc1.ap-singapore-1.aaaaaaaawgscu6wzqpatil2odersenhqtj5ayxnki57lae2p5hsm6ikwhz7q"
 
 RETRY_SECS = 300   # 5 minutes between attempts
 OCI_CONFIG = r"C:\trackme\.oci\config"
 # ─────────────────────────────────────────────────────────────────────────────
 
-use_micro = "--micro" in sys.argv
+use_micro  = "--micro" in sys.argv
+use_arm    = "--arm"   in sys.argv
+alternate  = not use_micro and not use_arm  # default: try both
 
 def ts():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -99,7 +103,13 @@ config = oci.config.from_file(OCI_CONFIG)
 compute = oci.core.ComputeClient(config)
 network = oci.core.VirtualNetworkClient(config)
 
-shape_label = "VM.Standard.E2.1.Micro (x86)" if use_micro else "VM.Standard.A1.Flex (ARM 4 OCPU / 24 GB)"
+if alternate:
+    shape_label = "A1.Flex (ARM) + E2.1.Micro (x86) alternating"
+elif use_micro:
+    shape_label = "VM.Standard.E2.1.Micro (x86, 1 GB)"
+else:
+    shape_label = "VM.Standard.A1.Flex (ARM 4 OCPU / 24 GB)"
+
 print(f"{'='*55}")
 print(f"  Oracle Cloud Instance Auto-Retry")
 print(f"  Shape  : {shape_label}")
@@ -111,9 +121,12 @@ print(f"{'='*55}\n")
 attempt = 0
 while True:
     attempt += 1
-    print(f"[{ts()}] Attempt #{attempt} — launching...", flush=True)
+    # Alternate: odd attempts try ARM, even attempts try Micro
+    try_micro = use_micro or (alternate and attempt % 2 == 0)
+    shape_name = "E2.1.Micro" if try_micro else "A1.Flex"
+    print(f"[{ts()}] Attempt #{attempt} [{shape_name}] — launching...", flush=True)
     try:
-        resp = launch_micro(compute) if use_micro else launch_arm(compute)
+        resp = launch_micro(compute) if try_micro else launch_arm(compute)
         instance = resp.data
         print(f"\n{'='*55}")
         print(f"  SUCCESS! Instance created.")
