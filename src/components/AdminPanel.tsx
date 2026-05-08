@@ -13,10 +13,14 @@ import {
   updateTraccarDevice,
   deleteTraccarDevice,
 } from "../services/traccarService";
+import { getAllUsers, assignDriverToDevice } from "../services/userService";
+import type { TraccarUser } from "../types/user";
 import { useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [traccarUsers, setTraccarUsers] = useState<TraccarUser[]>([]);
+  const [driverModal, setDriverModal] = useState<{ device: Device } | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
   const [formData, setFormData] = useState<DeviceFormData>({
@@ -49,7 +53,12 @@ const AdminPanel = () => {
   const loadDevices = async () => {
     setLoading(true);
     try {
-      setDevices(await getAllDevicesWithTraccar());
+      const [devs, users] = await Promise.all([
+        getAllDevicesWithTraccar(),
+        getAllUsers().catch(() => [] as TraccarUser[]),
+      ]);
+      setDevices(devs);
+      setTraccarUsers(users);
     } finally {
       setLoading(false);
     }
@@ -399,6 +408,7 @@ const AdminPanel = () => {
                     <th>Speed</th>
                     <th>Battery</th>
                     <th>Last Update</th>
+                    <th>Drivers</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -435,6 +445,11 @@ const AdminPanel = () => {
                         </small>
                       </td>
                       <td>
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setDriverModal({ device })}>
+                          Manage Drivers
+                        </button>
+                      </td>
+                      <td>
                         <button
                           className="btn btn-sm btn-outline-primary me-1"
                           onClick={() => handleEdit(device)}
@@ -458,6 +473,58 @@ const AdminPanel = () => {
           )}
         </div>
       </div>
+
+      {driverModal && (
+        <>
+          <div className="modal fade show" style={{ display: "block" }} tabIndex={-1}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Drivers — {driverModal.device.name}</h5>
+                  <button type="button" className="btn-close" onClick={() => setDriverModal(null)} />
+                </div>
+                <div className="modal-body">
+                  <p className="text-muted small mb-3">
+                    Multiple drivers can be assigned to one vehicle. One driver can be assigned to multiple vehicles.
+                  </p>
+                  {traccarUsers
+                    .filter((u) => u.attributes.trackme_role === "driver")
+                    .map((user) => (
+                      <div key={user.id} className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                        <div>
+                          <div className="fw-semibold">{user.name}</div>
+                          <div className="text-muted small">{user.email}</div>
+                        </div>
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={async () => {
+                            try {
+                              const deviceId = driverModal.device.traccarId;
+                              if (!deviceId) return;
+                              await assignDriverToDevice(user.id, deviceId);
+                              setToast({ type: "success", text: `${user.name} assigned to ${driverModal.device.name}.` });
+                            } catch {
+                              setToast({ type: "danger", text: "Failed to assign driver." });
+                            }
+                          }}
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    ))}
+                  {traccarUsers.filter((u) => u.attributes.trackme_role === "driver").length === 0 && (
+                    <p className="text-muted text-center py-3">No drivers found. Add drivers in User Management first.</p>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setDriverModal(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show" onClick={() => setDriverModal(null)} />
+        </>
+      )}
     </div>
   );
 };
