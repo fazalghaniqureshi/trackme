@@ -8,6 +8,8 @@ import {
   deleteDriver,
 } from "../services/driverService";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
+import { getAllUsers } from "../services/userService";
+import type { TraccarUser } from "../types/user";
 import StatCard from './StatCard';
 import EmptyState from './EmptyState';
 import Pagination from './Pagination';
@@ -41,6 +43,7 @@ const LicenseBadge = ({ expiry }: { expiry: string }) => {
 const DriverManager = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [traccarUsers, setTraccarUsers] = useState<TraccarUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
@@ -63,11 +66,19 @@ const DriverManager = () => {
     setLoading(true);
     try {
       setDrivers(getAllDrivers());
-      setDevices(await getAllDevicesWithTraccar());
+      const [devs, users] = await Promise.all([
+        getAllDevicesWithTraccar(),
+        getAllUsers().catch(() => [] as TraccarUser[]),
+      ]);
+      setDevices(devs);
+      setTraccarUsers(users);
     } finally {
       setLoading(false);
     }
   };
+
+  const getLinkedUser = (driver: Driver): TraccarUser | undefined =>
+    driver.traccarUserId ? traccarUsers.find((u) => u.id === driver.traccarUserId) : undefined;
 
   const getDeviceName = (deviceId: string | null) => {
     if (!deviceId) return null;
@@ -202,19 +213,20 @@ const DriverManager = () => {
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Assigned Vehicle</th>
+                  <th>Traccar Account</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-4 text-muted">
+                    <td colSpan={8} className="text-center py-4 text-muted">
                       <div className="spinner-border spinner-border-sm me-2" />
                       Loading…
                     </td>
                   </tr>
                 ) : pagedDrivers.length === 0 ? (
-                  <tr><td colSpan={7}>
+                  <tr><td colSpan={8}>
                     <EmptyState
                       icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
                       title="No drivers yet"
@@ -243,6 +255,18 @@ const DriverManager = () => {
                         ) : (
                           <span className="badge bg-secondary">Unassigned</span>
                         )}
+                      </td>
+                      <td>
+                        {(() => {
+                          const linked = getLinkedUser(driver);
+                          return linked ? (
+                            <span className="badge" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
+                              ✓ {linked.email}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">Not linked</span>
+                          );
+                        })()}
                       </td>
                       <td>
                         <button

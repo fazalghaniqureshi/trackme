@@ -9,6 +9,7 @@ export interface Driver {
   notes: string;
   createdAt: string;
   updatedAt: string;
+  traccarUserId?: number;
 }
 
 export interface DriverFormData {
@@ -19,4 +20,5 @@ export interface DriverFormData {
   email: string;
   assignedDeviceId: string; // "" = unassigned
   notes: string;
+  traccarUserId?: number;
 }
