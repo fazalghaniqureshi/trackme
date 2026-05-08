@@ -14,6 +14,7 @@ import type { Device } from "../types/device";
 import type { LocationPoint } from "../types/trip";
 import type { TraccarTripReport, TraccarSummaryReport, TraccarEvent } from "../types/event";
 import type { TraccarGeofence, GeofenceFormData } from "../types/geofence";
+import type { TraccarUser, TraccarGroup, PermissionLink } from "../types/user";
 
 // ---------------------------------------------------------------------------
 // Config & interfaces
@@ -88,6 +89,11 @@ export const initializeTraccar = async (config: TraccarConfig): Promise<boolean>
       return false;
     }
     localStorage.setItem("traccar_config", JSON.stringify(config));
+    const user = await getCurrentTraccarUser();
+    if (user) {
+      const role = user.admin ? "admin" : (user.attributes.trackme_role ?? null);
+      if (role) localStorage.setItem("trackme_current_role", role as string);
+    }
     // Pre-establish cookie session so WebSocket is ready immediately
     await establishCookieSession();
     return true;
@@ -140,6 +146,16 @@ export const isTraccarConfigured = (): boolean => {
   return loadTraccarConfig() !== null;
 };
 
+export const getCurrentTraccarUser = async (): Promise<TraccarUser | null> => {
+  try {
+    const res = await traccarFetch("session");
+    if (!res.ok) return null;
+    return res.json() as Promise<TraccarUser>;
+  } catch {
+    return null;
+  }
+};
+
 export const restoreTraccarSession = async (): Promise<boolean> => {
   const config = loadTraccarConfig();
   if (!config) return false;
@@ -162,6 +178,7 @@ export const disconnectTraccar = (): void => {
   traccarConfig = null;
   localStorage.removeItem("traccar_config");
   localStorage.removeItem("traccar_token");
+  localStorage.removeItem("trackme_current_role");
 };
 
 // ---------------------------------------------------------------------------
@@ -437,6 +454,104 @@ export const deleteTraccarGeofence = async (id: number): Promise<boolean> => {
     console.error("Error deleting geofence:", error);
     return false;
   }
+};
+
+// ---------------------------------------------------------------------------
+// User CRUD
+// ---------------------------------------------------------------------------
+
+export const getTraccarUsers = async (): Promise<TraccarUser[]> => {
+  const res = await traccarFetch("users");
+  if (!res.ok) return [];
+  return res.json() as Promise<TraccarUser[]>;
+};
+
+export const createTraccarUser = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  attributes: Record<string, unknown>;
+}): Promise<TraccarUser> => {
+  const res = await traccarFetch("users", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Failed to create user: ${text}`);
+  }
+  return res.json() as Promise<TraccarUser>;
+};
+
+export const updateTraccarUser = async (
+  id: number,
+  data: Partial<{ name: string; email: string; password: string; attributes: Record<string, unknown> }>
+): Promise<TraccarUser> => {
+  const current = await traccarFetch(`users/${id}`).then((r) => r.json()) as TraccarUser;
+  const res = await traccarFetch(`users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...current, ...data }),
+  });
+  if (!res.ok) throw new Error("Failed to update user");
+  return res.json() as Promise<TraccarUser>;
+};
+
+export const deleteTraccarUser = async (id: number): Promise<void> => {
+  const res = await traccarFetch(`users/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete user");
+};
+
+// ---------------------------------------------------------------------------
+// Group CRUD
+// ---------------------------------------------------------------------------
+
+export const getTraccarGroups = async (): Promise<TraccarGroup[]> => {
+  const res = await traccarFetch("groups");
+  if (!res.ok) return [];
+  return res.json() as Promise<TraccarGroup[]>;
+};
+
+export const createTraccarGroup = async (name: string): Promise<TraccarGroup> => {
+  const res = await traccarFetch("groups", {
+    method: "POST",
+    body: JSON.stringify({ name, attributes: {} }),
+  });
+  if (!res.ok) throw new Error("Failed to create group");
+  return res.json() as Promise<TraccarGroup>;
+};
+
+export const updateTraccarGroup = async (id: number, name: string): Promise<TraccarGroup> => {
+  const res = await traccarFetch(`groups/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ id, name, attributes: {} }),
+  });
+  if (!res.ok) throw new Error("Failed to update group");
+  return res.json() as Promise<TraccarGroup>;
+};
+
+export const deleteTraccarGroup = async (id: number): Promise<void> => {
+  const res = await traccarFetch(`groups/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete group");
+};
+
+// ---------------------------------------------------------------------------
+// Permissions
+// ---------------------------------------------------------------------------
+
+export const addTraccarPermission = async (link: PermissionLink): Promise<void> => {
+  const res = await traccarFetch("permissions", {
+    method: "POST",
+    body: JSON.stringify(link),
+  });
+  if (!res.ok) throw new Error("Failed to add permission");
+};
+
+export const removeTraccarPermission = async (link: PermissionLink): Promise<void> => {
+  const res = await traccarFetch("permissions", {
+    method: "DELETE",
+    body: JSON.stringify(link),
+  });
+  if (!res.ok) throw new Error("Failed to remove permission");
 };
 
 // ---------------------------------------------------------------------------
