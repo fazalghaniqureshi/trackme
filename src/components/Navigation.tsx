@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { isTraccarConfigured } from "../services/traccarService";
-import { getMyRole, canManageUsers, isAdmin } from "../services/userService";
+import { canManageUsers, isAdmin } from "../services/userService";
 
 // ── Inline SVG icon helper ────────────────────────────────────────────────────
 const Icon = ({ children }: { children: React.ReactNode }) => (
