@@ -438,7 +438,8 @@ h6 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform
 .modal-body   { padding: 1.25rem 1.35rem !important; }
 .modal-footer { border-top: 1px solid var(--c-border) !important; padding: 0.85rem 1.35rem !important; }
 .modal-title  { font-size: 1rem; font-weight: 600; }
-.modal-backdrop { background: rgba(0, 0, 0, 0.72) !important; backdrop-filter: blur(3px); }
+.modal-backdrop { background: rgba(0, 0, 0, 0.72) !important; backdrop-filter: blur(3px); z-index: 1040 !important; pointer-events: all; }
+.modal { z-index: 1050 !important; }
 
 /* ── Alerts ──────────────────────────────────────────── */
 .alert { border-radius: var(--r-sm) !important; font-size: 0.875rem; border: 1px solid; }
