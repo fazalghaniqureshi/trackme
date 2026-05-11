@@ -15,8 +15,6 @@ import L from "leaflet";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import "../assets/MapView.css";
-import carGray from "../assets/images/icon_gray.png";
-import carBlue from "../assets/images/icon_blue.png";
 import type { Device } from "../types/device";
 import { getAllDevicesWithTraccar } from "../services/deviceService";
 import {
@@ -61,28 +59,58 @@ export const getDeviceState = (device: { status: string; ignition?: boolean; spe
 
 const STATE_BADGE: Record<DeviceState, { dot: string; label: string; labelColor: string }> = {
   offline:  { dot: "#6b7280", label: "Offline",  labelColor: "#9ca3af" },
-  parked:   { dot: "#ef4444", label: "Parked",   labelColor: "#ef4444" },
+  parked:   { dot: "#3b82f6", label: "Parked",   labelColor: "#3b82f6" },
   idling:   { dot: "#f59e0b", label: "Idling",   labelColor: "#f59e0b" },
   moving:   { dot: "#22c55e", label: "Moving",   labelColor: "#22c55e" },
   speeding: { dot: "#ef4444", label: "Speeding", labelColor: "#ef4444" },
 };
 
+const STATE_COLOR: Record<DeviceState, string> = {
+  offline:  "#6b7280",
+  parked:   "#3b82f6",
+  idling:   "#f59e0b",
+  moving:   "#22c55e",
+  speeding: "#ef4444",
+};
 
+// SVG top-view car icon — color driven by state
+const carSVG = (color: string, selected: boolean): string => {
+  const s = selected ? 1.2 : 1;
+  const w = Math.round(28 * s), h = Math.round(46 * s);
+  const glow = color !== "#6b7280" ? `filter:drop-shadow(0 0 4px ${color}88)` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 28 46" style="${glow}">
+    <!-- body -->
+    <rect x="3" y="6" width="22" height="34" rx="6" fill="${color}"/>
+    <!-- front windshield -->
+    <rect x="6" y="9"  width="16" height="10" rx="3" fill="rgba(255,255,255,0.35)"/>
+    <!-- rear windshield -->
+    <rect x="6" y="27" width="16" height="8"  rx="2" fill="rgba(255,255,255,0.2)"/>
+    <!-- front headlights -->
+    <rect x="4"  y="5"  width="4" height="3" rx="1" fill="rgba(255,255,200,0.9)"/>
+    <rect x="20" y="5"  width="4" height="3" rx="1" fill="rgba(255,255,200,0.9)"/>
+    <!-- rear lights -->
+    <rect x="4"  y="38" width="4" height="3" rx="1" fill="rgba(255,80,80,0.9)"/>
+    <rect x="20" y="38" width="4" height="3" rx="1" fill="rgba(255,80,80,0.9)"/>
+    <!-- wheels -->
+    <rect x="0" y="10" width="4" height="8" rx="2" fill="#1f2937"/>
+    <rect x="24" y="10" width="4" height="8" rx="2" fill="#1f2937"/>
+    <rect x="0" y="28" width="4" height="8" rx="2" fill="#1f2937"/>
+    <rect x="24" y="28" width="4" height="8" rx="2" fill="#1f2937"/>
+    <!-- direction arrow (front) -->
+    <polygon points="14,2 11,7 17,7" fill="rgba(255,255,255,0.8)"/>
+  </svg>`;
+};
 
 const makeIcon = (selected: boolean, state: DeviceState): L.Icon => {
-  const src = selected ? carBlue : carGray;
-  const size = selected ? 48 : 40;
-  const anchor = size / 2;
-  const opacity = state === "offline" ? "0.4" : "1";
-  const { dot } = STATE_BADGE[state];
-  const pulse = state === "idling" ? "class=\"idling-badge\"" : "";
-  const shadow = state === "moving" ? ";box-shadow:0 0 4px rgba(34,197,94,.8)" : state === "speeding" ? ";box-shadow:0 0 4px rgba(239,68,68,.8)" : "";
-  const dotHtml = `<span ${pulse} style="position:absolute;top:0;right:0;width:11px;height:11px;border-radius:50%;background:${dot};border:2px solid #fff${shadow}"></span>`;
+  const color = STATE_COLOR[state];
+  const svg = carSVG(color, selected);
+  const w = selected ? 34 : 28;
+  const h = selected ? 55 : 46;
   return new L.DivIcon({
     className: "",
-    html: `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity}"><img src="${src}" style="width:${size}px;height:${size}px" />${dotHtml}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [anchor, anchor],
+    html: `<div style="width:${w}px;height:${h}px">${svg}</div>`,
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h / 2],
   }) as unknown as L.Icon;
 };
 
