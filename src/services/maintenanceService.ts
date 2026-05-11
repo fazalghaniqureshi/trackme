@@ -1,4 +1,5 @@
 import type { MaintenanceRecord, MaintenanceFormData } from "../types/maintenance";
+import { generateId } from "../utils/format";
 
 const STORAGE_KEY = "trackme_maintenance";
 
@@ -30,7 +31,7 @@ export const createMaintenanceRecord = (formData: MaintenanceFormData): Maintena
   const records = load();
   const now = new Date().toISOString();
   const record: MaintenanceRecord = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     deviceId: formData.deviceId,
     serviceType: formData.serviceType,
     serviceDate: formData.serviceDate,

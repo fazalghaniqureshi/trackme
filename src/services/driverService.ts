@@ -1,4 +1,5 @@
 import type { Driver, DriverFormData } from "../types/driver";
+import { generateId } from "../utils/format";
 
 const STORAGE_KEY = "trackme_drivers";
 
@@ -31,7 +32,7 @@ export const createDriver = (formData: DriverFormData): Driver => {
   const drivers = load();
   const now = new Date().toISOString();
   const driver: Driver = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     name: formData.name.trim(),
     licenseNumber: formData.licenseNumber.trim(),
     licenseExpiry: formData.licenseExpiry,

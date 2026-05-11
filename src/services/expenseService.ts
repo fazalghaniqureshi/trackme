@@ -4,6 +4,7 @@ import type {
   ExpenseCategory,
   FleetExpenseStats,
 } from "../types/expense";
+import { generateId } from "../utils/format";
 import { EXPENSE_CATEGORIES } from "../types/expense";
 
 const STORAGE_KEY = "trackme_expenses";
@@ -36,7 +37,7 @@ export const createExpense = (formData: ExpenseFormData): ExpenseEntry => {
   const entries = load();
   const now = new Date().toISOString();
   const entry: ExpenseEntry = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     deviceId: formData.deviceId,
     category: formData.category,
     date: formData.date,

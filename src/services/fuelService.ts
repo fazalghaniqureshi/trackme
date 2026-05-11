@@ -1,4 +1,5 @@
 import type { FuelEntry, FuelFormData } from "../types/fuel";
+import { generateId } from "../utils/format";
 
 const STORAGE_KEY = "trackme_fuel";
 
@@ -47,7 +48,7 @@ export const createFuelEntry = (formData: FuelFormData): FuelEntry => {
   const odometer = parseFloat(formData.odometer) || 0;
   const now = new Date().toISOString();
   const entry: FuelEntry = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     deviceId: formData.deviceId,
     date: formData.date,
     liters,
