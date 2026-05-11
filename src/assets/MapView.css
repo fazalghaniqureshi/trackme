@@ -80,10 +80,19 @@
   pointer-events: none;
 }
 
-/* ── Speeding alert ───────────────────────────────────── */
+/* ── Device state animations ─────────────────────────── */
 @keyframes speed-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.55; transform: scale(1.5); }
+}
+
+@keyframes idle-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.idling-badge {
+  animation: idle-pulse 1.4s ease-in-out infinite;
 }
 
 .speeding-badge {

@@ -48,33 +48,44 @@ const playheadIcon = new L.DivIcon({
   iconAnchor: [7, 7],
 }) as unknown as L.Icon;
 
-/** Returns a speeding-alert icon (car image + pulsing red dot overlay). */
-const makeSpeedingIcon = (selected: boolean): L.Icon => {
-  const src = selected ? carBlue : carGray;
-  const size = selected ? 48 : 40;
-  const anchor = size / 2;
-  return new L.DivIcon({
-    className: "",
-    html: `<div style="position:relative;width:${size}px;height:${size}px"><img src="${src}" style="width:${size}px;height:${size}px" /><span class="speeding-badge"></span></div>`,
-    iconSize: [size, size],
-    iconAnchor: [anchor, anchor],
-  }) as unknown as L.Icon;
+export type DeviceState = "offline" | "parked" | "idling" | "moving" | "speeding";
+
+export const getDeviceState = (device: { status: string; ignition?: boolean; speed?: number }, speedLimit: number): DeviceState => {
+  if (device.status !== "online") return "offline";
+  const spd = device.speed ?? 0;
+  if (spd > speedLimit) return "speeding";
+  if (device.ignition === true && spd >= 2) return "moving";
+  if (device.ignition === true && spd < 2) return "idling";
+  return "parked";
 };
 
-const makeIcon = (selected: boolean, speeding: boolean, ignition?: boolean): L.Icon => {
-  if (speeding) return makeSpeedingIcon(selected);
+const STATE_BADGE: Record<DeviceState, { dot: string; label: string; labelColor: string }> = {
+  offline:  { dot: "#6b7280", label: "Offline",  labelColor: "#9ca3af" },
+  parked:   { dot: "#ef4444", label: "Parked",   labelColor: "#ef4444" },
+  idling:   { dot: "#f59e0b", label: "Idling",   labelColor: "#f59e0b" },
+  moving:   { dot: "#22c55e", label: "Moving",   labelColor: "#22c55e" },
+  speeding: { dot: "#ef4444", label: "Speeding", labelColor: "#ef4444" },
+};
+
+const makeStatusOverlay = (state: DeviceState): string => {
+  const { dot, label, labelColor } = STATE_BADGE[state];
+  const pulse = (state === "idling") ? "class=\"idling-badge\"" : "";
+  const shadow = (state === "moving") ? ";box-shadow:0 0 4px rgba(34,197,94,.8)" : (state === "speeding") ? ";box-shadow:0 0 4px rgba(239,68,68,.8)" : "";
+  return `<div style="position:absolute;top:-2px;left:calc(100% + 4px);display:flex;align-items:center;gap:4px;white-space:nowrap;pointer-events:none">
+    <span ${pulse} style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dot};border:2px solid #fff;flex-shrink:0${shadow}"></span>
+    <span style="font-size:10px;font-weight:700;color:${labelColor};background:rgba(8,15,30,0.85);padding:1px 5px;border-radius:4px;border:1px solid ${dot}33;letter-spacing:.3px">${label}</span>
+  </div>`;
+};
+
+const makeIcon = (selected: boolean, state: DeviceState): L.Icon => {
   const src = selected ? carBlue : carGray;
   const size = selected ? 48 : 40;
   const anchor = size / 2;
-  // ignition indicator dot: green = on, red = off, none = unknown
-  const dot = ignition === true
-    ? `<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;box-shadow:0 0 4px rgba(34,197,94,.8)"></span>`
-    : ignition === false
-    ? `<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid #fff"></span>`
-    : "";
+  const opacity = state === "offline" ? "0.4" : "1";
+  const overlay = makeStatusOverlay(state);
   return new L.DivIcon({
     className: "",
-    html: `<div style="position:relative;width:${size}px;height:${size}px"><img src="${src}" style="width:${size}px;height:${size}px" />${dot}</div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity}"><img src="${src}" style="width:${size}px;height:${size}px" />${overlay}</div>`,
     iconSize: [size, size],
     iconAnchor: [anchor, anchor],
   }) as unknown as L.Icon;
@@ -234,6 +245,7 @@ const MapView = () => {
   const isSpeeding = (d: Device) =>
     d.speed !== undefined && d.speed > speedLimit && d.status === "online";
   const speedingCount = devices.filter(isSpeeding).length;
+  const deviceState = (d: Device): DeviceState => getDeviceState(d, speedLimit);
 
   // ---------------------------------------------------------------------------
   // Device loading
@@ -831,7 +843,7 @@ const MapView = () => {
                 <Marker
                   key={device.id}
                   position={device.coords}
-                  icon={makeIcon(device.id === selectedId, isSpeeding(device), device.ignition as boolean | undefined)}
+                  icon={makeIcon(device.id === selectedId, deviceState(device))}
                   rotationAngle={device.angle}
                   rotationOrigin="center"
                   ref={(ref: any) => {
