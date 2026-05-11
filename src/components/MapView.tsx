@@ -73,31 +73,34 @@ const STATE_COLOR: Record<DeviceState, string> = {
   speeding: "#ef4444",
 };
 
-// SVG top-view car icon — color driven by state
+// Option D — Fleet/truck top-down SVG icon, color driven by state
 const carSVG = (color: string, selected: boolean): string => {
-  const s = selected ? 1.2 : 1;
-  const w = Math.round(28 * s), h = Math.round(46 * s);
-  const glow = color !== "#6b7280" ? `filter:drop-shadow(0 0 4px ${color}88)` : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 28 46" style="${glow}">
+  const w = selected ? 34 : 28;
+  const h = selected ? 58 : 48;
+  const glow = color !== "#6b7280" ? `filter:drop-shadow(0 0 5px ${color}99)` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 28 48" style="${glow}">
     <!-- body -->
-    <rect x="3" y="6" width="22" height="34" rx="6" fill="${color}"/>
+    <rect x="3" y="4" width="22" height="40" rx="5" fill="${color}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
     <!-- front windshield -->
-    <rect x="6" y="9"  width="16" height="10" rx="3" fill="rgba(255,255,255,0.35)"/>
+    <rect x="6" y="7" width="16" height="12" rx="3" fill="rgba(255,255,255,0.32)"/>
+    <!-- cabin divider line -->
+    <line x1="3" y1="20" x2="25" y2="20" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
     <!-- rear windshield -->
-    <rect x="6" y="27" width="16" height="8"  rx="2" fill="rgba(255,255,255,0.2)"/>
+    <rect x="6" y="30" width="16" height="9" rx="2" fill="rgba(255,255,255,0.15)"/>
+    <!-- front wheels -->
+    <rect x="0" y="10" width="4" height="9" rx="2" fill="#1e293b"/>
+    <rect x="24" y="10" width="4" height="9" rx="2" fill="#1e293b"/>
+    <!-- rear wheels -->
+    <rect x="0" y="29" width="4" height="9" rx="2" fill="#1e293b"/>
+    <rect x="24" y="29" width="4" height="9" rx="2" fill="#1e293b"/>
     <!-- front headlights -->
-    <rect x="4"  y="5"  width="4" height="3" rx="1" fill="rgba(255,255,200,0.9)"/>
-    <rect x="20" y="5"  width="4" height="3" rx="1" fill="rgba(255,255,200,0.9)"/>
+    <rect x="5"  y="3" width="7" height="3" rx="1.5" fill="rgba(255,255,210,0.95)"/>
+    <rect x="16" y="3" width="7" height="3" rx="1.5" fill="rgba(255,255,210,0.95)"/>
     <!-- rear lights -->
-    <rect x="4"  y="38" width="4" height="3" rx="1" fill="rgba(255,80,80,0.9)"/>
-    <rect x="20" y="38" width="4" height="3" rx="1" fill="rgba(255,80,80,0.9)"/>
-    <!-- wheels -->
-    <rect x="0" y="10" width="4" height="8" rx="2" fill="#1f2937"/>
-    <rect x="24" y="10" width="4" height="8" rx="2" fill="#1f2937"/>
-    <rect x="0" y="28" width="4" height="8" rx="2" fill="#1f2937"/>
-    <rect x="24" y="28" width="4" height="8" rx="2" fill="#1f2937"/>
-    <!-- direction arrow (front) -->
-    <polygon points="14,2 11,7 17,7" fill="rgba(255,255,255,0.8)"/>
+    <rect x="5"  y="44" width="7" height="3" rx="1.5" fill="rgba(255,60,60,0.9)"/>
+    <rect x="16" y="44" width="7" height="3" rx="1.5" fill="rgba(255,60,60,0.9)"/>
+    <!-- roof highlight -->
+    <rect x="7" y="8" width="14" height="5" rx="2" fill="rgba(255,255,255,0.12)"/>
   </svg>`;
 };
 
@@ -105,7 +108,7 @@ const makeIcon = (selected: boolean, state: DeviceState): L.Icon => {
   const color = STATE_COLOR[state];
   const svg = carSVG(color, selected);
   const w = selected ? 34 : 28;
-  const h = selected ? 55 : 46;
+  const h = selected ? 58 : 48;
   return new L.DivIcon({
     className: "",
     html: `<div style="width:${w}px;height:${h}px">${svg}</div>`,
