@@ -67,25 +67,20 @@ const STATE_BADGE: Record<DeviceState, { dot: string; label: string; labelColor:
   speeding: { dot: "#ef4444", label: "Speeding", labelColor: "#ef4444" },
 };
 
-const makeStatusOverlay = (state: DeviceState): string => {
-  const { dot, label, labelColor } = STATE_BADGE[state];
-  const pulse = (state === "idling") ? "class=\"idling-badge\"" : "";
-  const shadow = (state === "moving") ? ";box-shadow:0 0 4px rgba(34,197,94,.8)" : (state === "speeding") ? ";box-shadow:0 0 4px rgba(239,68,68,.8)" : "";
-  return `<div style="position:absolute;top:-2px;left:calc(100% + 4px);display:flex;align-items:center;gap:4px;white-space:nowrap;pointer-events:none">
-    <span ${pulse} style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dot};border:2px solid #fff;flex-shrink:0${shadow}"></span>
-    <span style="font-size:10px;font-weight:700;color:${labelColor};background:rgba(8,15,30,0.85);padding:1px 5px;border-radius:4px;border:1px solid ${dot}33;letter-spacing:.3px">${label}</span>
-  </div>`;
-};
+
 
 const makeIcon = (selected: boolean, state: DeviceState): L.Icon => {
   const src = selected ? carBlue : carGray;
   const size = selected ? 48 : 40;
   const anchor = size / 2;
   const opacity = state === "offline" ? "0.4" : "1";
-  const overlay = makeStatusOverlay(state);
+  const { dot } = STATE_BADGE[state];
+  const pulse = state === "idling" ? "class=\"idling-badge\"" : "";
+  const shadow = state === "moving" ? ";box-shadow:0 0 4px rgba(34,197,94,.8)" : state === "speeding" ? ";box-shadow:0 0 4px rgba(239,68,68,.8)" : "";
+  const dotHtml = `<span ${pulse} style="position:absolute;top:0;right:0;width:11px;height:11px;border-radius:50%;background:${dot};border:2px solid #fff${shadow}"></span>`;
   return new L.DivIcon({
     className: "",
-    html: `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity}"><img src="${src}" style="width:${size}px;height:${size}px" />${overlay}</div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;opacity:${opacity}"><img src="${src}" style="width:${size}px;height:${size}px" />${dotHtml}</div>`,
     iconSize: [size, size],
     iconAnchor: [anchor, anchor],
   }) as unknown as L.Icon;
@@ -593,6 +588,8 @@ const MapView = () => {
             ) : (
               devices.map((device) => {
                 const speeding = isSpeeding(device);
+                const state = deviceState(device);
+                const { dot, label, labelColor } = STATE_BADGE[state];
                 return (
                   <div
                     key={device.id}
@@ -602,9 +599,14 @@ const MapView = () => {
                       setShouldFly(true);
                     }}
                   >
-                    <div className="d-flex align-items-center mb-1">
-                      <span className={`status-dot ${device.status}`} />
-                      <span className="device-name">{device.name}</span>
+                    <div className="d-flex align-items-center justify-content-between mb-1">
+                      <div className="d-flex align-items-center">
+                        <span className={`status-dot ${device.status}`} />
+                        <span className="device-name">{device.name}</span>
+                      </div>
+                      <span style={{ fontSize: "10px", fontWeight: 700, color: labelColor, background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: "10px", border: `1px solid ${dot}55`, flexShrink: 0 }}>
+                        {label}
+                      </span>
                     </div>
                     {device.speed !== undefined && (
                       <div className={`device-speed${speeding ? " speeding" : ""}`}>
@@ -970,6 +972,8 @@ const MapView = () => {
                 ) : (
                   devices.map((device) => {
                     const sp = isSpeeding(device);
+                    const st = deviceState(device);
+                    const { dot: dotC, label: labelC, labelColor: lc } = STATE_BADGE[st];
                     return (
                       <div
                         key={device.id}
@@ -980,9 +984,14 @@ const MapView = () => {
                           setMobileTab(null);
                         }}
                       >
-                        <div className="d-flex align-items-center mb-1">
-                          <span className={`status-dot ${device.status}`} />
-                          <span className="device-name">{device.name}</span>
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <div className="d-flex align-items-center">
+                            <span className={`status-dot ${device.status}`} />
+                            <span className="device-name">{device.name}</span>
+                          </div>
+                          <span style={{ fontSize: "10px", fontWeight: 700, color: lc, background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: "10px", border: `1px solid ${dotC}55`, flexShrink: 0 }}>
+                            {labelC}
+                          </span>
                         </div>
                         {device.speed !== undefined && (
                           <div className={`device-speed${sp ? " speeding" : ""}`}>
