@@ -40,17 +40,6 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 // Icons
 // ---------------------------------------------------------------------------
 
-const defaultIcon = new L.Icon({
-  iconUrl: carGray,
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-});
-
-const selectedIcon = new L.Icon({
-  iconUrl: carBlue,
-  iconSize: [48, 48],
-  iconAnchor: [24, 24],
-});
 
 const playheadIcon = new L.DivIcon({
   className: "",
@@ -72,8 +61,24 @@ const makeSpeedingIcon = (selected: boolean): L.Icon => {
   }) as unknown as L.Icon;
 };
 
-const makeIcon = (selected: boolean, speeding: boolean): L.Icon =>
-  speeding ? makeSpeedingIcon(selected) : selected ? selectedIcon : defaultIcon;
+const makeIcon = (selected: boolean, speeding: boolean, ignition?: boolean): L.Icon => {
+  if (speeding) return makeSpeedingIcon(selected);
+  const src = selected ? carBlue : carGray;
+  const size = selected ? 48 : 40;
+  const anchor = size / 2;
+  // ignition indicator dot: green = on, red = off, none = unknown
+  const dot = ignition === true
+    ? `<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;box-shadow:0 0 4px rgba(34,197,94,.8)"></span>`
+    : ignition === false
+    ? `<span style="position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid #fff"></span>`
+    : "";
+  return new L.DivIcon({
+    className: "",
+    html: `<div style="position:relative;width:${size}px;height:${size}px"><img src="${src}" style="width:${size}px;height:${size}px" />${dot}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [anchor, anchor],
+  }) as unknown as L.Icon;
+};
 
 // ---------------------------------------------------------------------------
 // WKT helper (circle geofences)
@@ -318,6 +323,7 @@ const MapView = () => {
                 battery:
                   (position.attributes?.batteryLevel as number | undefined) ?? device.battery,
                 signal: (position.attributes?.rssi as number | undefined) ?? device.signal,
+                ignition: (position.attributes?.ignition as boolean | undefined) ?? device.ignition,
                 lastUpdate: new Date(position.fixTime),
                 status: "online",
               };
@@ -825,7 +831,7 @@ const MapView = () => {
                 <Marker
                   key={device.id}
                   position={device.coords}
-                  icon={makeIcon(device.id === selectedId, isSpeeding(device))}
+                  icon={makeIcon(device.id === selectedId, isSpeeding(device), device.ignition as boolean | undefined)}
                   rotationAngle={device.angle}
                   rotationOrigin="center"
                   ref={(ref: any) => {

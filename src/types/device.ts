@@ -42,6 +42,7 @@ export interface Device {
   speed?: number;
   battery?: number;
   signal?: number;
+  ignition?: boolean;
   description?: string;
   createdAt: Date;
   updatedAt: Date;
